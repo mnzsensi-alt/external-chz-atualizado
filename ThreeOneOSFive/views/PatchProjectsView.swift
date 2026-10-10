@@ -152,6 +152,14 @@ struct PatchProjectsView: View {
                     }
                 }
                 .listStyle(.insetGrouped)
+                .sheet(isPresented: $showCreate) {
+                    PatchProjectEditorView(
+                        existingProject: nil,
+                        passwordIsProtected: false
+                    ) { project, password in
+                        store.create(project: project, password: password)
+                    }
+                }
             }
             .navigationTitle(language.text("tab.installed"))
             .navigationBarTitleDisplayMode(.inline)
@@ -208,14 +216,6 @@ struct PatchProjectsView: View {
                     }
                 )
                 .ignoresSafeArea()
-            }
-            .sheet(isPresented: $showCreate) {
-                PatchProjectEditorView(
-                    existingProject: nil,
-                    passwordIsProtected: false
-                ) { project, password in
-                    store.create(project: project, password: password)
-                }
             }
             .sheet(isPresented: $showCleaner) {
                 CleanerView()
