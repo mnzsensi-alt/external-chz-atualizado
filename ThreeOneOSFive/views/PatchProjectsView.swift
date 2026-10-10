@@ -2010,7 +2010,11 @@ private struct MonochromeGlassBackdrop: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color.black, Color(white: 0.075), Color(white: 0.02)],
+                gradient: Gradient(stops: [
+                    .init(color: .black, location: 0),
+                    .init(color: .black, location: 0.61),
+                    .init(color: Color(white: 0.085), location: 1)
+                ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -2018,7 +2022,7 @@ private struct MonochromeGlassBackdrop: View {
                 Canvas { context, size in
                     guard size.width > 0, size.height > 0 else { return }
                     let elapsed = timeline.date.timeIntervalSinceReferenceDate
-                    let motion = elapsed * 0.17
+                    let motion = elapsed * 0.20
                     let centers = [
                         CGPoint(
                             x: size.width * CGFloat(0.17 + 0.055 * sin(motion * 0.83)),
@@ -2045,14 +2049,14 @@ private struct MonochromeGlassBackdrop: View {
                             verticalRadius: size.height * CGFloat((0.075 + 0.014 * cos(wave * 0.83)) * 1.15)
                         )
                     }
-                    let links = [(0, 1), (1, 2), (2, 3), (3, 0), (0, 2)]
+                    let links = [(0, 1), (1, 2), (2, 3), (3, 0)]
 
                     for (index, pair) in links.enumerated() {
                         let first = lobes[pair.0].center
                         let second = lobes[pair.1].center
-                        let wave = 0.5 + 0.5 * sin(elapsed * 0.23 + Double(index) * 1.55)
-                        let strength = CGFloat(Self.smoothstep((wave - 0.2) / 0.62))
-                        let width = min(size.width * 0.273, 110) * strength
+                        let wave = 0.5 + 0.5 * sin(elapsed * 0.27 + Double(index) * 1.55)
+                        let strength = CGFloat(Self.smoothstep((wave - 0.42) / 0.5))
+                        let width = min(size.width * 0.17, 70) * strength
                         guard width > 0.25 else { continue }
 
                         let control = CGPoint(
