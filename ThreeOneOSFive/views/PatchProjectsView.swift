@@ -1740,6 +1740,7 @@ private struct DeviceInfoGlassCard: View {
 
 struct AvatarCacheTabView: View {
     @Environment(\.appLanguage) private var language
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var store: PatchProjectStore
     @State private var pendingStates: [UUID: Bool] = [:]
 
@@ -1797,7 +1798,7 @@ struct AvatarCacheTabView: View {
                 ToolbarItem(placement: .principal) {
                     Text(tabTitle)
                         .font(.system(size: 22, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                 }
             }
         }
@@ -1815,7 +1816,7 @@ struct AvatarCacheTabView: View {
             Text(name)
                 .font(.system(size: 15, weight: .black, design: .rounded))
                 .tracking(0.35)
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1832,11 +1833,9 @@ struct AvatarCacheTabView: View {
                     RoundedRectangle(cornerRadius: 25, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.13),
-                                    Color.white.opacity(0.035),
-                                    Color.black.opacity(0.17)
-                                ],
+                                colors: colorScheme == .dark
+                                    ? [Color.white.opacity(0.13), Color.white.opacity(0.035), Color.black.opacity(0.17)]
+                                    : [Color.white.opacity(0.92), Color.white.opacity(0.62), Color.black.opacity(0.025)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -1847,7 +1846,11 @@ struct AvatarCacheTabView: View {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .fill(
                     RadialGradient(
-                        colors: [Color.white.opacity(0.13), .clear],
+                        colors: [
+                            (colorScheme == .dark ? Color.white : Color.black)
+                                .opacity(colorScheme == .dark ? 0.13 : 0.025),
+                            .clear
+                        ],
                         center: .topLeading,
                         startRadius: 0,
                         endRadius: 250
@@ -1859,18 +1862,16 @@ struct AvatarCacheTabView: View {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.42),
-                            Color.white.opacity(0.075),
-                            Color.gray.opacity(0.19)
-                        ],
+                        colors: colorScheme == .dark
+                            ? [Color.white.opacity(0.42), Color.white.opacity(0.075), Color.gray.opacity(0.19)]
+                            : [Color.white.opacity(0.95), Color.gray.opacity(0.28), Color.black.opacity(0.08)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
                     lineWidth: 0.9
                 )
         }
-        .shadow(color: Color.black.opacity(0.42), radius: 22, x: 0, y: 12)
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.42 : 0.10), radius: 22, x: 0, y: 12)
     }
 
     @ViewBuilder
@@ -1893,7 +1894,7 @@ struct AvatarCacheTabView: View {
         } else if store.isBusy {
             ProgressView()
                 .controlSize(.small)
-                .tint(.white)
+                .tint(colorScheme == .dark ? Color.white : Color.primary)
                 .frame(minWidth: 90)
                 .accessibilityLabel(language.text("patch.bundled.loading"))
         } else {
@@ -1907,7 +1908,7 @@ struct AvatarCacheTabView: View {
                         .minimumScaleFactor(0.75)
                 }
                 .font(.system(size: 9, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.78))
+                .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : Color.primary.opacity(0.78))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(language.text("patch.bundled.unavailable"))
@@ -1947,6 +1948,7 @@ struct AvatarCacheTabView: View {
 
 private struct LiquidGlassToggleStyle: ToggleStyle {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeBody(configuration: Configuration) -> some View {
         Button {
@@ -1958,12 +1960,15 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
                 Capsule()
                     .fill(.ultraThinMaterial)
                     .overlay {
-                        Capsule().fill(Color.white.opacity(configuration.isOn ? 0.18 : 0.055))
+                        Capsule().fill(Color.primary.opacity(configuration.isOn ? 0.18 : 0.055))
                     }
                     .overlay {
                         Capsule().strokeBorder(
                             LinearGradient(
-                                colors: [Color.white.opacity(0.48), Color.white.opacity(0.10)],
+                                colors: [
+                                    Color.primary.opacity(colorScheme == .dark ? 0.48 : 0.22),
+                                    Color.primary.opacity(colorScheme == .dark ? 0.10 : 0.07)
+                                ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -1973,14 +1978,19 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color.white, Color.gray.opacity(0.78)],
+                            colors: colorScheme == .dark
+                                ? [Color.white, Color.gray.opacity(0.78)]
+                                : [Color.white, Color.gray.opacity(0.18)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 29, height: 29)
                     .padding(4)
-                    .shadow(color: Color.black.opacity(0.42), radius: 6, x: 0, y: 2)
+                    .overlay {
+                        Circle().strokeBorder(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.15), lineWidth: 0.7)
+                    }
+                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.42 : 0.16), radius: 6, x: 0, y: 2)
             }
             .frame(width: 72, height: 40)
             .opacity(isEnabled ? 1 : 0.44)
@@ -1994,12 +2004,14 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
 }
 
 private struct MonochromeGlassBackdrop: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         LinearGradient(
             gradient: Gradient(stops: [
-                .init(color: Color(white: 0.045), location: 0),
-                .init(color: Color(white: 0.045), location: 0.61),
-                .init(color: Color(white: 0.10), location: 1)
+                .init(color: Color(white: colorScheme == .dark ? 0.045 : 0.985), location: 0),
+                .init(color: Color(white: colorScheme == .dark ? 0.045 : 0.985), location: 0.61),
+                .init(color: Color(white: colorScheme == .dark ? 0.10 : 0.86), location: 1)
             ]),
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -2011,6 +2023,18 @@ private struct MonochromeGlassBackdrop: View {
 }
 
 struct LiquidGlassDeviceInfoTabView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
+
+    // Login/validação ainda não existe; estes valores serão fornecidos pelo fluxo de ativação futuro.
+    let activationKey: String?
+    let keyExpiresAt: Date?
+
+    init(activationKey: String? = nil, keyExpiresAt: Date? = nil) {
+        self.activationKey = activationKey
+        self.keyExpiresAt = keyExpiresAt
+    }
+
     private var compatible: Bool {
         let version = AppInfo.versionTuple
         return ExploitSupportPolicy.isSupported(
@@ -2021,31 +2045,21 @@ struct LiquidGlassDeviceInfoTabView: View {
         )
     }
 
+    private var maskedKey: String {
+        guard let activationKey else { return "AGUARDANDO LOGIN" }
+        let visiblePrefix = String(activationKey.prefix(5))
+        let hiddenLength = max(0, activationKey.count - visiblePrefix.count)
+        return visiblePrefix + String(repeating: "•", count: hiddenLength)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 MonochromeGlassBackdrop()
-                VStack(alignment: .leading, spacing: 14) {
-                    infoCard(
-                        symbol: "iphone",
-                        title: "MODELO DO DISPOSITIVO",
-                        value: UIDevice.current.model,
-                        detail: AppInfo.displayMachineName
-                    )
-                    infoCard(
-                        symbol: "gearshape",
-                        title: "VERSÃO DO iOS",
-                        value: "iOS \(AppInfo.osVersion)",
-                        detail: "Build \(AppInfo.osBuild)"
-                    )
-                    infoCard(
-                        symbol: compatible ? "checkmark.shield" : "info.circle",
-                        title: "COMPATIBILIDADE DO 3105",
-                        value: compatible ? "Dentro da faixa suportada" : "Fora da faixa verificada",
-                        detail: compatible
-                            ? "Esta versão do iOS está na faixa verificada para o exploit do 3105."
-                            : "Esta versão do iOS não está na faixa verificada no código do 3105."
-                    )
+                VStack(spacing: 14) {
+                    keyStatusCard
+                    deviceSummaryCard
+                    Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 17)
                 .padding(.top, 18)
@@ -2056,78 +2070,171 @@ struct LiquidGlassDeviceInfoTabView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("DISPOSITIVO")
+                    Text("PERFIL")
                         .font(.system(size: 22, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        darkModeEnabled.toggle()
+                    } label: {
+                        Label(
+                            darkModeEnabled ? "CLARO" : "ESCURO",
+                            systemImage: darkModeEnabled ? "sun.max.fill" : "moon.fill"
+                        )
+                        .font(.system(size: 10, weight: .black, design: .rounded))
+                        .labelStyle(.titleAndIcon)
+                    }
+                    .accessibilityLabel(darkModeEnabled ? "Ativar modo claro" : "Ativar modo escuro")
                 }
             }
         }
         .tint(AppTheme.accent)
     }
 
-    private func infoCard(
-        symbol: String,
-        title: String,
-        value: String,
-        detail: String
-    ) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: symbol)
+    private var keyStatusCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "key.fill")
+                    .font(.system(size: 14, weight: .bold))
+                Text("TEMPO DE KEY")
+                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .tracking(0.8)
+                Spacer(minLength: 4)
+                Text(activationKey == nil ? "AGUARDANDO LOGIN" : "KEY ATIVA")
+                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(.primary)
+
+            Group {
+                if let keyExpiresAt {
+                    TimelineView(.periodic(from: Date(), by: 1)) { context in
+                        Text(countdownText(until: keyExpiresAt, now: context.date))
+                    }
+                } else {
+                    Text("--D  --:--:--")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.system(size: 28, weight: .black, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
+            .accessibilityLabel(keyExpiresAt == nil ? "Contagem aguardando login" : "Tempo restante da key")
+
+            Divider()
+
+            HStack(alignment: .bottom, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("KEY")
+                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .tracking(0.8)
+                        .foregroundStyle(.secondary)
+                    Text(maskedKey)
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+                Spacer(minLength: 0)
+                Button(action: copyActivationKey) {
+                    Label("COPIAR", systemImage: "doc.on.doc")
+                        .font(.system(size: 10, weight: .black, design: .rounded))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 9)
+                        .background(.ultraThinMaterial, in: Capsule())
+                }
+                .disabled(activationKey == nil)
+                .opacity(activationKey == nil ? 0.45 : 1)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(profileCardSurface())
+    }
+
+    private var deviceSummaryCard: some View {
+        HStack(alignment: .top, spacing: 13) {
+            Image(systemName: "iphone")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .frame(width: 40, height: 40)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.24), lineWidth: 0.8)
+                        .strokeBorder(Color.primary.opacity(colorScheme == .dark ? 0.18 : 0.12), lineWidth: 0.8)
                 }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("DISPOSITIVO")
                     .font(.system(size: 11, weight: .heavy, design: .rounded))
                     .tracking(0.9)
-                    .foregroundStyle(.white.opacity(0.62))
-                Text(value)
-                    .font(.system(size: 19, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.secondary)
+                Text("\(UIDevice.current.model) · \(AppInfo.displayMachineName)")
+                    .font(.system(size: 17, weight: .black, design: .rounded))
+                    .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(detail)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.62))
+                Label("iOS \(AppInfo.osVersion) · Build \(AppInfo.osBuild)", systemImage: "gearshape.fill")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Label(
+                    compatible ? "COMPATIBILIDADE CONFIRMADA" : "COMPATIBILIDADE NÃO VERIFICADA",
+                    systemImage: compatible ? "checkmark.shield.fill" : "info.circle.fill"
+                )
+                .font(.system(size: 10, weight: .black, design: .rounded))
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+                Text(compatible
+                    ? "Esta versão do iOS está na faixa verificada para o 3105."
+                    : "Esta versão do iOS não está na faixa verificada no código do 3105.")
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.13),
-                                    Color.white.opacity(0.035),
-                                    Color.black.opacity(0.17)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+        .background(profileCardSurface())
+    }
+
+    private func profileCardSurface() -> some View {
+        RoundedRectangle(cornerRadius: 25, style: .continuous)
+            .fill(.ultraThinMaterial)
+            .overlay {
+                RoundedRectangle(cornerRadius: 25, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: colorScheme == .dark
+                                ? [Color.white.opacity(0.13), Color.white.opacity(0.035), Color.black.opacity(0.17)]
+                                : [Color.white.opacity(0.92), Color.white.opacity(0.62), Color.black.opacity(0.025)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                }
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.40), Color.white.opacity(0.07), Color.gray.opacity(0.18)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.9
-                )
-        }
-        .shadow(color: Color.black.opacity(0.42), radius: 22, x: 0, y: 12)
+                    )
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 25, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(colorScheme == .dark ? 0.20 : 0.12), lineWidth: 0.9)
+            }
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.40 : 0.08), radius: 22, x: 0, y: 12)
+    }
+
+    private func countdownText(until expiration: Date, now: Date) -> String {
+        let remaining = max(0, Int(expiration.timeIntervalSince(now)))
+        guard remaining > 0 else { return "EXPIRADA" }
+        let days = remaining / 86_400
+        let hours = (remaining % 86_400) / 3_600
+        let minutes = (remaining % 3_600) / 60
+        let seconds = remaining % 60
+        return String(format: "%02dD  %02d:%02d:%02d", days, hours, minutes, seconds)
+    }
+
+    private func copyActivationKey() {
+        guard let activationKey else { return }
+        UIPasteboard.general.string = activationKey
     }
 }

@@ -9,6 +9,8 @@ struct ContentView: View {
     @EnvironmentObject private var repositoryStore: PackageRepositoryStore
     @AppStorage(FeatureVisibility.developerModeStorageKey)
     private var developerModeEnabled = false
+    @AppStorage(AppAppearance.darkModeStorageKey)
+    private var darkModeEnabled = true
     @State private var tabNavigation: AppTabNavigationState
     @State private var showSettings = false
     @State private var showLogs = false
@@ -67,7 +69,7 @@ struct ContentView: View {
         .sheet(isPresented: $showLogs) { LogView() }
         .patchStorePresentation(patchStore)
         .repositoryStorePresentation(repositoryStore, patchStore: patchStore)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(darkModeEnabled ? .dark : .light)
     }
 
     private var compactLayout: some View {
@@ -78,7 +80,8 @@ struct ContentView: View {
                         CompactTabLabel(
                             title: section.displayTitle(language: language),
                             systemImage: section.systemImage,
-                            isReticle: section == .installed
+                            isReticle: section == .installed,
+                            isProfile: section == .deviceInfo
                         )
                     }
                     .tag(section.rawValue)
@@ -100,6 +103,8 @@ struct ContentView: View {
                         } icon: {
                             if section == .installed {
                                 Image(uiImage: ReticleTabIconImage.image)
+                            } else if section == .deviceInfo {
+                                ProfileTabIcon()
                             } else {
                                 Image(systemName: section.systemImage)
                             }
@@ -215,11 +220,14 @@ private struct CompactTabLabel: View {
     let title: String
     let systemImage: String
     let isReticle: Bool
+    let isProfile: Bool
 
     @ViewBuilder
     var body: some View {
         if isReticle {
             Image(uiImage: ReticleTabIconImage.image)
+        } else if isProfile {
+            ProfileTabIcon()
         } else if let image = UIImage(
             systemName: systemImage,
             withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
@@ -231,6 +239,17 @@ private struct CompactTabLabel: View {
         }
         Text(title)
             .font(.system(size: 10, weight: .black, design: .rounded))
+    }
+}
+
+private struct ProfileTabIcon: View {
+    var body: some View {
+        Image(systemName: "person.fill")
+            .font(.system(size: 12, weight: .black))
+            .foregroundStyle(Color.black)
+            .frame(width: 23, height: 23)
+            .background(Circle().fill(Color.white))
+            .accessibilityHidden(true)
     }
 }
 
@@ -285,7 +304,7 @@ private extension AppSection {
         switch self {
         case .installed: return "AVATAR"
         case .patchesSecond: return "CACHE"
-        case .deviceInfo: return "DISPOSITIVO"
+        case .deviceInfo: return "PERFIL"
         default: return language.text(titleKey)
         }
     }
@@ -299,7 +318,7 @@ private extension AppSection {
         case .files: return "folder.fill"
         case .search: return "magnifyingglass"
         case .patchesSecond: return "externaldrive.fill"
-        case .deviceInfo: return "iphone"
+        case .deviceInfo: return "person.fill"
         }
     }
 }

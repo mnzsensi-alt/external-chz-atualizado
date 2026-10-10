@@ -1,5 +1,9 @@
 import SwiftUI
 
+enum AppAppearance {
+    static let darkModeStorageKey = "app.appearance.darkMode"
+}
+
 enum AppTheme {
     static let accent = Color(uiColor: .label)
     static let pageBackground = Color(uiColor: .systemBackground)
