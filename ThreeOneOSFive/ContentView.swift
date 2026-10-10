@@ -262,8 +262,6 @@ private struct CompactTabLabel: View {
             .font(.system(size: 10, weight: .black, design: .rounded))
     }
 }
-    }
-}
 
 private struct ProfileTabIcon: View {
     var body: some View {
