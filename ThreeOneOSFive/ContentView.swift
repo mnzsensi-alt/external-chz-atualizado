@@ -102,7 +102,7 @@ struct ContentView: View {
                     alignment: .top
                 )
                 .clipped()
-                .animation(.easeInOut(duration: 0.34), value: tabNavigation.selectedTab)
+                .animation(.easeInOut(duration: 0.272), value: tabNavigation.selectedTab)
             }
         }
     }
@@ -146,7 +146,7 @@ struct ContentView: View {
             sectionContent(selectedVisibleSection)
                 .id(selectedVisibleSection.rawValue)
                 .transition(slideBlurTransition(width: 500))
-                .animation(.easeInOut(duration: 0.34), value: tabNavigation.selectedTab)
+                .animation(.easeInOut(duration: 0.272), value: tabNavigation.selectedTab)
         }
         .navigationSplitViewStyle(.balanced)
     }
@@ -202,7 +202,7 @@ struct ContentView: View {
         let currentIndex = sections.firstIndex { $0.rawValue == tabNavigation.selectedTab } ?? 0
         let nextIndex = sections.firstIndex { $0.rawValue == selectedTab } ?? currentIndex
         tabSlideDirection = nextIndex >= currentIndex ? .forward : .backward
-        withAnimation(.easeInOut(duration: 0.34)) {
+        withAnimation(.easeInOut(duration: 0.272)) {
             tabNavigation.select(selectedTab)
         }
     }
