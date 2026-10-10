@@ -12,6 +12,7 @@ struct ContentView: View {
     @AppStorage(AppAppearance.darkModeStorageKey)
     private var darkModeEnabled = true
     @State private var tabNavigation: AppTabNavigationState
+    @State private var compactSlideDirection: CompactTabSlideDirection = .forward
     @State private var showSettings = false
     @State private var showLogs = false
 
@@ -73,19 +74,74 @@ struct ContentView: View {
     }
 
     private var compactLayout: some View {
-        TabView(selection: tabSelection) {
+        ZStack {
+            sectionContent(selectedVisibleSection)
+                .id(selectedVisibleSection.rawValue)
+                .transition(compactTabTransition)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
+        .animation(.easeInOut(duration: 0.28), value: tabNavigation.selectedTab)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            compactTabBar
+        }
+    }
+
+    private var compactTabBar: some View {
+        HStack(spacing: 0) {
             ForEach(featureVisibility.visibleSections) { section in
-                sectionContent(section)
-                    .tabItem {
-                        CompactTabLabel(
-                            title: section.displayTitle(language: language),
-                            systemImage: section.systemImage,
-                            isReticle: section == .installed,
-                            isProfile: section == .deviceInfo
-                        )
-                    }
-                    .tag(section.rawValue)
+                let isSelected = section.rawValue == tabNavigation.selectedTab
+                Button {
+                    selectCompactTab(section)
+                } label: {
+                    CompactTabLabel(
+                        title: section.displayTitle(language: language),
+                        systemImage: section.systemImage,
+                        isReticle: section == .installed,
+                        isProfile: section == .deviceInfo
+                    )
+                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(section.displayTitle(language: language))
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
+        }
+        .padding(.horizontal, 5)
+        .padding(.top, 3)
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea(edges: .bottom)
+        }
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.10))
+                .frame(height: 0.5)
+        }
+    }
+
+    private var compactTabTransition: AnyTransition {
+        switch compactSlideDirection {
+        case .forward:
+            return .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading))
+        case .backward:
+            return .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing))
+        }
+    }
+
+    private func selectCompactTab(_ section: AppSection) {
+        let sections = featureVisibility.visibleSections
+        let currentIndex = sections.firstIndex { $0.rawValue == tabNavigation.selectedTab } ?? 0
+        let nextIndex = sections.firstIndex(of: section) ?? currentIndex
+        guard nextIndex != currentIndex else { return }
+        compactSlideDirection = nextIndex > currentIndex ? .forward : .backward
+        withAnimation(.easeInOut(duration: 0.28)) {
+            tabNavigation.select(section.rawValue)
         }
     }
 
@@ -129,6 +185,8 @@ struct ContentView: View {
         } detail: {
             sectionContent(selectedVisibleSection)
                 .id(selectedVisibleSection.rawValue)
+                .transition(.move(edge: .trailing))
+                .animation(.easeInOut(duration: 0.28), value: tabNavigation.selectedTab)
         }
         .navigationSplitViewStyle(.balanced)
     }
@@ -171,13 +229,6 @@ struct ContentView: View {
         }
     }
 
-    private var tabSelection: Binding<Int> {
-        Binding(
-            get: { tabNavigation.selectedTab },
-            set: { tabNavigation.select($0) }
-        )
-    }
-
     private var filesTabSession: Binding<FilesTabSession> {
         Binding(
             get: { tabNavigation.filesTabs },
@@ -216,6 +267,11 @@ struct ContentView: View {
     }
 }
 
+private enum CompactTabSlideDirection {
+    case forward
+    case backward
+}
+
 private struct CompactTabLabel: View {
     let title: String
     let systemImage: String
@@ -224,21 +280,27 @@ private struct CompactTabLabel: View {
 
     @ViewBuilder
     var body: some View {
-        if isReticle {
-            Image(uiImage: ReticleTabIconImage.image)
-        } else if isProfile {
-            ProfileTabIcon()
-        } else if let image = UIImage(
-            systemName: systemImage,
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
-        )?.withRenderingMode(.alwaysTemplate) {
-            Image(uiImage: image)
-        } else {
-            Image(systemName: systemImage)
-                .font(.system(size: 17, weight: .medium))
+        VStack(spacing: 4) {
+            Group {
+                if isReticle {
+                    Image(uiImage: ReticleTabIconImage.image)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                } else if isProfile {
+                    ProfileTabIcon()
+                } else {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 17, weight: .medium))
+                }
+            }
+            .frame(width: 23, height: 23)
+
+            Text(title)
+                .font(.system(size: 10, weight: .black, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
         }
-        Text(title)
-            .font(.system(size: 10, weight: .black, design: .rounded))
     }
 }
 
