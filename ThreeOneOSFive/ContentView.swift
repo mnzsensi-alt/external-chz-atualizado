@@ -218,6 +218,7 @@ private struct CompactTabLabel: View {
                 .font(.system(size: 17, weight: .medium))
         }
         Text(title)
+            .font(.system(size: 10, weight: .black, design: .rounded))
     }
 }
 
@@ -249,7 +250,7 @@ private extension AppSection {
         case .home: return "house.fill"
         case .new: return "clock.fill"
         case .sources: return "shippingbox.fill"
-        case .installed: return "person.crop.circle.fill"
+        case .installed: return "viewfinder"
         case .files: return "folder.fill"
         case .search: return "magnifyingglass"
         case .patchesSecond: return "externaldrive.fill"

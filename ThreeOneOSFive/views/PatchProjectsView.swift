@@ -1773,20 +1773,25 @@ struct AvatarCacheTabView: View {
         NavigationStack {
             ZStack {
                 MonochromeGlassBackdrop()
-                ScrollView {
-                    VStack(spacing: 13) {
-                        ForEach(options) { option in
-                            patchRow(option)
-                        }
+                VStack(spacing: 13) {
+                    ForEach(options) { option in
+                        patchRow(option)
                     }
-                    .padding(.horizontal, 17)
-                    .padding(.top, 22)
-                    .padding(.bottom, 34)
                 }
-                .scrollIndicators(.hidden)
+                .padding(.horizontal, 17)
+                .padding(.top, 22)
+                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
-            .navigationTitle(tabTitle)
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(tabTitle)
+                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+            }
         }
         .tint(AppTheme.accent)
         .onChange(of: store.isBusy) { busy in
@@ -1801,7 +1806,7 @@ struct AvatarCacheTabView: View {
 
         return HStack(spacing: 13) {
             Text(name)
-                .font(.system(.body, design: .rounded).weight(.semibold))
+                .font(.system(size: 18, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1911,50 +1916,35 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
                 configuration.isOn.toggle()
             }
         } label: {
-            HStack(spacing: 8) {
-                Text(configuration.isOn ? "LIGADO" : "DESLIGADO")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .tracking(0.5)
-                    .foregroundStyle(Color.white.opacity(configuration.isOn ? 0.96 : 0.68))
-                    .frame(width: 54, alignment: .trailing)
-
-                ZStack(alignment: configuration.isOn ? .trailing : .leading) {
-                    Capsule()
-                        .fill(Color.white.opacity(configuration.isOn ? 0.17 : 0.07))
-                        .overlay {
-                            Capsule().strokeBorder(Color.white.opacity(0.28), lineWidth: 0.8)
-                        }
-                    Circle()
-                        .fill(
+            ZStack(alignment: configuration.isOn ? .trailing : .leading) {
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Capsule().fill(Color.white.opacity(configuration.isOn ? 0.18 : 0.055))
+                    }
+                    .overlay {
+                        Capsule().strokeBorder(
                             LinearGradient(
-                                colors: [Color.white, Color.gray.opacity(0.78)],
+                                colors: [Color.white.opacity(0.48), Color.white.opacity(0.10)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
-                            )
+                            ),
+                            lineWidth: 0.9
                         )
-                        .frame(width: 25, height: 25)
-                        .padding(4)
-                        .shadow(color: Color.black.opacity(0.42), radius: 6, x: 0, y: 2)
-                }
-                .frame(width: 60, height: 34)
+                    }
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white, Color.gray.opacity(0.78)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 29, height: 29)
+                    .padding(4)
+                    .shadow(color: Color.black.opacity(0.42), radius: 6, x: 0, y: 2)
             }
-            .padding(.leading, 10)
-            .padding(.trailing, 5)
-            .frame(height: 44)
-            .background(.ultraThinMaterial, in: Capsule())
-            .background {
-                Capsule().fill(Color.white.opacity(configuration.isOn ? 0.105 : 0.035))
-            }
-            .overlay {
-                Capsule().strokeBorder(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.42), Color.white.opacity(0.09)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.9
-                )
-            }
+            .frame(width: 72, height: 40)
             .opacity(isEnabled ? 1 : 0.44)
         }
         .buttonStyle(.plain)
@@ -2009,43 +1999,42 @@ struct LiquidGlassDeviceInfoTabView: View {
         NavigationStack {
             ZStack {
                 MonochromeGlassBackdrop()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        infoCard(
-                            symbol: "iphone",
-                            title: "MODELO DO DISPOSITIVO",
-                            value: UIDevice.current.model,
-                            detail: AppInfo.displayMachineName
-                        )
-                        infoCard(
-                            symbol: "gearshape",
-                            title: "VERSÃO DO iOS",
-                            value: "iOS \(AppInfo.osVersion)",
-                            detail: "Build \(AppInfo.osBuild)"
-                        )
-                        infoCard(
-                            symbol: compatible ? "checkmark.shield" : "info.circle",
-                            title: "COMPATIBILIDADE DO 3105",
-                            value: compatible ? "Dentro da faixa suportada" : "Fora da faixa verificada",
-                            detail: compatible
-                                ? "Esta versão do iOS está na faixa verificada para o exploit do 3105."
-                                : "Esta versão do iOS não está na faixa verificada no código do 3105."
-                        )
-                        Text("A aplicação dos patches também depende do app-alvo e do acesso aos arquivos dele neste dispositivo.")
-                            .font(.footnote)
-                            .foregroundStyle(.white.opacity(0.62))
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.horizontal, 4)
-                            .padding(.top, 3)
-                    }
-                    .padding(.horizontal, 17)
-                    .padding(.top, 22)
-                    .padding(.bottom, 34)
+                VStack(alignment: .leading, spacing: 14) {
+                    infoCard(
+                        symbol: "iphone",
+                        title: "MODELO DO DISPOSITIVO",
+                        value: UIDevice.current.model,
+                        detail: AppInfo.displayMachineName
+                    )
+                    infoCard(
+                        symbol: "gearshape",
+                        title: "VERSÃO DO iOS",
+                        value: "iOS \(AppInfo.osVersion)",
+                        detail: "Build \(AppInfo.osBuild)"
+                    )
+                    infoCard(
+                        symbol: compatible ? "checkmark.shield" : "info.circle",
+                        title: "COMPATIBILIDADE DO 3105",
+                        value: compatible ? "Dentro da faixa suportada" : "Fora da faixa verificada",
+                        detail: compatible
+                            ? "Esta versão do iOS está na faixa verificada para o exploit do 3105."
+                            : "Esta versão do iOS não está na faixa verificada no código do 3105."
+                    )
                 }
-                .scrollIndicators(.hidden)
+                .padding(.horizontal, 17)
+                .padding(.top, 18)
+                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
-            .navigationTitle("Dispositivo")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Dispositivo")
+                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+            }
         }
         .tint(AppTheme.accent)
     }
@@ -2068,15 +2057,15 @@ struct LiquidGlassDeviceInfoTabView: View {
                 }
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.caption2.weight(.bold))
+                    .font(.system(size: 11, weight: .heavy, design: .rounded))
                     .tracking(0.9)
                     .foregroundStyle(.white.opacity(0.62))
                 Text(value)
-                    .font(.headline.weight(.semibold))
+                    .font(.system(size: 19, weight: .black, design: .rounded))
                     .foregroundStyle(.white)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(detail)
-                    .font(.footnote)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.62))
                     .fixedSize(horizontal: false, vertical: true)
             }
