@@ -12,8 +12,7 @@ struct ContentView: View {
     @AppStorage(AppAppearance.darkModeStorageKey)
     private var darkModeEnabled = true
     @State private var tabNavigation: AppTabNavigationState
-    @State private var tabTransitionBlurRadius: CGFloat = 0
-    @State private var blurResetToken = UUID()
+    @State private var tabSlideDirection: TabSlideDirection = .forward
     @State private var showSettings = false
     @State private var showLogs = false
 
@@ -56,13 +55,10 @@ struct ContentView: View {
         .tint(AppTheme.accent)
         .imageScale(.small)
         .onChange(of: patchDraftCoordinator.request?.id) { requestID in
-            if requestID != nil { tabNavigation.select(AppSection.installed.rawValue) }
+            if requestID != nil { selectTab(AppSection.installed.rawValue) }
         }
         .onChange(of: patchDraftCoordinator.importRequest?.id) { requestID in
-            if requestID != nil { tabNavigation.select(AppSection.installed.rawValue) }
-        }
-        .onChange(of: tabNavigation.selectedTab) { _ in
-            animateTabSwitchBlur()
+            if requestID != nil { selectTab(AppSection.installed.rawValue) }
         }
         .onChange(of: developerModeEnabled) { _ in
             tabNavigation.reconcileSelection(with: featureVisibility)
@@ -78,19 +74,36 @@ struct ContentView: View {
     }
 
     private var compactLayout: some View {
-        TabView(selection: tabSelection) {
-            ForEach(featureVisibility.visibleSections) { section in
-                sectionContent(section)
-                    .blur(radius: tabTransitionBlurRadius)
-                    .tabItem {
-                        CompactTabLabel(
-                            title: section.displayTitle(language: language),
-                            systemImage: section.systemImage,
-                            isReticle: section == .installed,
-                            isProfile: section == .deviceInfo
-                        )
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                TabView(selection: tabSelection) {
+                    ForEach(featureVisibility.visibleSections) { section in
+                        Color.clear
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .tabItem {
+                                CompactTabLabel(
+                                    title: section.displayTitle(language: language),
+                                    systemImage: section.systemImage,
+                                    isReticle: section == .installed,
+                                    isProfile: section == .deviceInfo
+                                )
+                            }
+                            .tag(section.rawValue)
                     }
-                    .tag(section.rawValue)
+                }
+
+                ZStack {
+                    sectionContent(selectedVisibleSection)
+                        .id(selectedVisibleSection.rawValue)
+                        .transition(slideBlurTransition(width: geometry.size.width))
+                }
+                .frame(
+                    width: geometry.size.width,
+                    height: max(0, geometry.size.height - 49 - geometry.safeAreaInsets.bottom),
+                    alignment: .top
+                )
+                .clipped()
+                .animation(.easeInOut(duration: 0.34), value: tabNavigation.selectedTab)
             }
         }
     }
@@ -100,9 +113,7 @@ struct ContentView: View {
             List {
                 ForEach(featureVisibility.visibleSections) { section in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.18)) {
-                            tabNavigation.select(section.rawValue)
-                        }
+                        selectTab(section.rawValue)
                     } label: {
                         Label {
                             Text(section.displayTitle(language: language))
@@ -135,7 +146,8 @@ struct ContentView: View {
         } detail: {
             sectionContent(selectedVisibleSection)
                 .id(selectedVisibleSection.rawValue)
-                .blur(radius: tabTransitionBlurRadius)
+                .transition(slideBlurTransition(width: 500))
+                .animation(.easeInOut(duration: 0.34), value: tabNavigation.selectedTab)
         }
         .navigationSplitViewStyle(.balanced)
     }
@@ -181,22 +193,33 @@ struct ContentView: View {
     private var tabSelection: Binding<Int> {
         Binding(
             get: { tabNavigation.selectedTab },
-            set: { tabNavigation.select($0) }
+            set: { selectTab($0) }
         )
     }
 
-    private func animateTabSwitchBlur() {
-        let token = UUID()
-        blurResetToken = token
-        withAnimation(.easeOut(duration: 0.10)) {
-            tabTransitionBlurRadius = 9
+    private func selectTab(_ selectedTab: Int) {
+        let sections = featureVisibility.visibleSections
+        let currentIndex = sections.firstIndex { $0.rawValue == tabNavigation.selectedTab } ?? 0
+        let nextIndex = sections.firstIndex { $0.rawValue == selectedTab } ?? currentIndex
+        tabSlideDirection = nextIndex >= currentIndex ? .forward : .backward
+        withAnimation(.easeInOut(duration: 0.34)) {
+            tabNavigation.select(selectedTab)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-            guard blurResetToken == token else { return }
-            withAnimation(.easeInOut(duration: 0.18)) {
-                tabTransitionBlurRadius = 0
-            }
-        }
+    }
+
+    private func slideBlurTransition(width: CGFloat) -> AnyTransition {
+        let direction: CGFloat = tabSlideDirection == .forward ? 1 : -1
+        let horizontalOffset = width * direction
+        return .asymmetric(
+            insertion: .modifier(
+                active: SlideBlurTransitionModifier(horizontalOffset: horizontalOffset, blurRadius: 12),
+                identity: SlideBlurTransitionModifier(horizontalOffset: 0, blurRadius: 0)
+            ),
+            removal: .modifier(
+                active: SlideBlurTransitionModifier(horizontalOffset: -horizontalOffset, blurRadius: 12),
+                identity: SlideBlurTransitionModifier(horizontalOffset: 0, blurRadius: 0)
+            )
+        )
     }
 
     private var filesTabSession: Binding<FilesTabSession> {
@@ -234,6 +257,30 @@ struct ContentView: View {
 
     private func openLogs() {
         showLogs = true
+    }
+}
+
+private enum TabSlideDirection {
+    case forward
+    case backward
+}
+
+private struct SlideBlurTransitionModifier: AnimatableModifier {
+    var horizontalOffset: CGFloat
+    var blurRadius: CGFloat
+
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(horizontalOffset, blurRadius) }
+        set {
+            horizontalOffset = newValue.first
+            blurRadius = newValue.second
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .blur(radius: max(0, blurRadius))
+            .offset(x: horizontalOffset)
     }
 }
 
