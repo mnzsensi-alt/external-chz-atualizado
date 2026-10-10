@@ -38,7 +38,7 @@ enum BundledPatchCatalog {
         BundledPatchOption(number: 5, filename: "FF - Hs Pescoço-Alto.3105", packageName: "Hs Pescoço+Alto"),
         BundledPatchOption(number: 6, filename: "HS 100-.3105", packageName: "HS 100%"),
         BundledPatchOption(number: 7, filename: "HS PESCOÇO - ANTENA-2.3105", packageName: "HS PESCOÇO + ANTENA"),
-        BundledPatchOption(number: 8, filename: "HS PESCOÇO.3105", packageName: "HS PESCOÇO")
+        BundledPatchOption(number: 8, filename: "HS PESCOÇO.3105", packageName: "HS BYPASS AP")
     ]
 
     static func sourceKey(for packageID: UUID) -> String {
@@ -51,6 +51,11 @@ enum BundledPatchCatalog {
 
     static func option(packageName: String) -> BundledPatchOption? {
         options.first { $0.packageName == packageName }
+    }
+
+    static func preferredPackageID(for filename: String) -> UUID? {
+        guard filename == "HS PESCOÇO.3105" else { return nil }
+        return UUID(uuidString: "4C87975D-5988-4C05-8A6D-158964CA5F5E")
     }
 }
 
@@ -164,11 +169,19 @@ final class PatchProjectStore: ObservableObject {
     }
 
     func bundledItem(for option: BundledPatchOption) -> PatchLibraryItem? {
-        items.first { item in
+        let candidates = items.filter { item in
             UserDefaults.standard.string(
                 forKey: BundledPatchCatalog.sourceKey(for: item.id)
             ) == option.filename
         }
+        if let activeItem = candidates.first(where: { isApplied($0.id) }) {
+            return activeItem
+        }
+        if let preferredID = BundledPatchCatalog.preferredPackageID(for: option.filename),
+           let preferredItem = items.first(where: { $0.id == preferredID }) {
+            return preferredItem
+        }
+        return candidates.first
     }
 
     func setBundledPatch(_ projectID: UUID, active: Bool) {

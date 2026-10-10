@@ -1746,20 +1746,27 @@ struct AvatarCacheTabView: View {
     let groupIndex: Int
 
     private var filenames: [String] {
+        let visibleFilenames: [String]
         if groupIndex == 0 {
-            return [
+            visibleFilenames = [
                 "FF - Hs Pescoço 100-.3105",
                 "FF - Hs Alto 100-.3105",
-                "HS PESCOÇO - ANTENA-2.3105",
                 "FF - Hs Pescoço-Alto.3105"
             ]
+        } else {
+            visibleFilenames = [
+                "FF - Hs Alto Baypss.3105",
+                "HS PESCOÇO.3105"
+            ]
         }
-        return [
-            "420 i.3105",
-            "FF - Hs Alto Baypss.3105",
-            "HS 100-.3105",
-            "HS PESCOÇO.3105"
-        ]
+        let activeHiddenFilenames = BundledPatchCatalog.options.compactMap { option -> String? in
+            guard option.tabIndex == groupIndex,
+                  !visibleFilenames.contains(option.filename),
+                  let item = store.bundledItem(for: option),
+                  store.isApplied(item.id) else { return nil }
+            return option.filename
+        }
+        return visibleFilenames + activeHiddenFilenames
     }
 
     private var options: [BundledPatchOption] {
