@@ -1745,11 +1745,23 @@ struct AvatarCacheTabView: View {
     @State private var pendingStates: [UUID: Bool] = [:]
 
     let groupIndex: Int
-    let showsBackdrop: Bool
+    let transitionProgress: CGFloat
+    let slideDirection: CGFloat
+    let transitionWidth: CGFloat
+    let isSelected: Bool
 
-    init(groupIndex: Int, showsBackdrop: Bool = true) {
+    init(
+        groupIndex: Int,
+        transitionProgress: CGFloat = 1,
+        slideDirection: CGFloat = 1,
+        transitionWidth: CGFloat = 0,
+        isSelected: Bool = true
+    ) {
         self.groupIndex = groupIndex
-        self.showsBackdrop = showsBackdrop
+        self.transitionProgress = transitionProgress
+        self.slideDirection = slideDirection
+        self.transitionWidth = transitionWidth
+        self.isSelected = isSelected
     }
 
     private var filenames: [String] {
@@ -1787,11 +1799,7 @@ struct AvatarCacheTabView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                if showsBackdrop {
-                    MonochromeGlassBackdrop()
-                } else {
-                    Color.clear
-                }
+                MonochromeGlassBackdrop()
                 VStack(spacing: 13) {
                     ForEach(options) { option in
                         patchRow(option)
@@ -1801,14 +1809,27 @@ struct AvatarCacheTabView: View {
                 .padding(.top, 22)
                 .padding(.bottom, 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .modifier(TabContentSlideMotion(
+                    progress: transitionProgress,
+                    width: transitionWidth,
+                    direction: slideDirection,
+                    isSelected: isSelected
+                ))
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text(tabTitle)
                         .font(.system(size: 22, weight: .black, design: .rounded))
                         .foregroundStyle(.primary)
+                        .modifier(TabContentSlideMotion(
+                            progress: transitionProgress,
+                            width: transitionWidth,
+                            direction: slideDirection,
+                            isSelected: isSelected
+                        ))
                 }
             }
         }
@@ -2013,7 +2034,7 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
     }
 }
 
-struct MonochromeGlassBackdrop: View {
+private struct MonochromeGlassBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -2032,6 +2053,26 @@ struct MonochromeGlassBackdrop: View {
     }
 }
 
+private struct TabContentSlideMotion: AnimatableModifier {
+    var progress: CGFloat
+    let width: CGFloat
+    let direction: CGFloat
+    let isSelected: Bool
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        let clampedProgress = min(max(progress, 0), 1)
+        let motion = isSelected ? 1 - clampedProgress : 0
+        content
+            .blur(radius: 8 * motion)
+            .offset(x: width * direction * motion)
+    }
+}
+
 struct LiquidGlassDeviceInfoTabView: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
@@ -2039,12 +2080,25 @@ struct LiquidGlassDeviceInfoTabView: View {
     // Login/validação ainda não existe; estes valores serão fornecidos pelo fluxo de ativação futuro.
     let activationKey: String?
     let keyExpiresAt: Date?
-    let showsBackdrop: Bool
+    let transitionProgress: CGFloat
+    let slideDirection: CGFloat
+    let transitionWidth: CGFloat
+    let isSelected: Bool
 
-    init(activationKey: String? = nil, keyExpiresAt: Date? = nil, showsBackdrop: Bool = true) {
+    init(
+        activationKey: String? = nil,
+        keyExpiresAt: Date? = nil,
+        transitionProgress: CGFloat = 1,
+        slideDirection: CGFloat = 1,
+        transitionWidth: CGFloat = 0,
+        isSelected: Bool = true
+    ) {
         self.activationKey = activationKey
         self.keyExpiresAt = keyExpiresAt
-        self.showsBackdrop = showsBackdrop
+        self.transitionProgress = transitionProgress
+        self.slideDirection = slideDirection
+        self.transitionWidth = transitionWidth
+        self.isSelected = isSelected
     }
 
     private enum CompatibilityStatus {
@@ -2089,11 +2143,7 @@ struct LiquidGlassDeviceInfoTabView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                if showsBackdrop {
-                    MonochromeGlassBackdrop()
-                } else {
-                    Color.clear
-                }
+                MonochromeGlassBackdrop()
                 VStack(spacing: 14) {
                     keyStatusCard
                     deviceSummaryCard
@@ -2103,14 +2153,27 @@ struct LiquidGlassDeviceInfoTabView: View {
                 .padding(.top, 18)
                 .padding(.bottom, 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .modifier(TabContentSlideMotion(
+                    progress: transitionProgress,
+                    width: transitionWidth,
+                    direction: slideDirection,
+                    isSelected: isSelected
+                ))
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("PERFIL")
                         .font(.system(size: 22, weight: .black, design: .rounded))
                         .foregroundStyle(.primary)
+                        .modifier(TabContentSlideMotion(
+                            progress: transitionProgress,
+                            width: transitionWidth,
+                            direction: slideDirection,
+                            isSelected: isSelected
+                        ))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {

@@ -13,6 +13,8 @@ struct ContentView: View {
     private var darkModeEnabled = true
     @State private var tabNavigation: AppTabNavigationState
     @State private var tabSlideDirection: TabSlideDirection = .forward
+    @State private var tabTransitionProgress: CGFloat = 1
+    @State private var tabTransitionToken = UUID()
     @State private var showSettings = false
     @State private var showLogs = false
 
@@ -75,39 +77,27 @@ struct ContentView: View {
 
     private var compactLayout: some View {
         GeometryReader { geometry in
-            ZStack(alignment: .top) {
-                TabView(selection: tabSelection) {
-                    ForEach(featureVisibility.visibleSections) { section in
-                        sectionContent(section)
-                            .tabItem {
-                                CompactTabLabel(
-                                    title: section.displayTitle(language: language),
-                                    systemImage: section.systemImage,
-                                    isReticle: section == .installed,
-                                    isProfile: section == .deviceInfo
-                                )
-                            }
-                            .tag(section.rawValue)
+            TabView(selection: tabSelection) {
+                ForEach(featureVisibility.visibleSections) { section in
+                    sectionContent(
+                        section,
+                        transitionProgress: tabTransitionProgress,
+                        slideDirection: tabSlideDirection == .forward ? 1 : -1,
+                        transitionWidth: geometry.size.width,
+                        isSelected: section.rawValue == tabNavigation.selectedTab
+                    )
+                    .tabItem {
+                        CompactTabLabel(
+                            title: section.displayTitle(language: language),
+                            systemImage: section.systemImage,
+                            isReticle: section == .installed,
+                            isProfile: section == .deviceInfo
+                        )
                     }
+                    .tag(section.rawValue)
                 }
-                .toolbarBackground(.hidden, for: .tabBar)
-
-                ZStack {
-                    MonochromeGlassBackdrop()
-                    ZStack {
-                        sectionContent(selectedVisibleSection, showsBackdrop: false)
-                            .id(selectedVisibleSection.rawValue)
-                            .transition(slideBlurTransition(width: geometry.size.width))
-                    }
-                }
-                .frame(
-                    width: geometry.size.width,
-                    height: max(0, geometry.size.height - 49 - geometry.safeAreaInsets.bottom),
-                    alignment: .top
-                )
-                .clipped()
-                .animation(.easeInOut(duration: 0.272), value: tabNavigation.selectedTab)
             }
+            .toolbarBackground(.hidden, for: .tabBar)
         }
     }
 
@@ -147,16 +137,25 @@ struct ContentView: View {
             .navigationTitle("3105")
             .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 300)
         } detail: {
-            sectionContent(selectedVisibleSection)
-                .id(selectedVisibleSection.rawValue)
-                .transition(slideBlurTransition(width: 500))
-                .animation(.easeInOut(duration: 0.272), value: tabNavigation.selectedTab)
+            sectionContent(
+                selectedVisibleSection,
+                transitionProgress: tabTransitionProgress,
+                slideDirection: tabSlideDirection == .forward ? 1 : -1,
+                transitionWidth: 500,
+                isSelected: true
+            )
         }
         .navigationSplitViewStyle(.balanced)
     }
 
     @ViewBuilder
-    private func sectionContent(_ section: AppSection, showsBackdrop: Bool = true) -> some View {
+    private func sectionContent(
+        _ section: AppSection,
+        transitionProgress: CGFloat = 1,
+        slideDirection: CGFloat = 1,
+        transitionWidth: CGFloat = 0,
+        isSelected: Bool = true
+    ) -> some View {
         switch section {
         case .home:
             RepositoryHomeView(
@@ -174,11 +173,28 @@ struct ContentView: View {
                 onOpenLogs: openLogs
             )
         case .installed:
-            AvatarCacheTabView(groupIndex: 0, showsBackdrop: showsBackdrop)
+            AvatarCacheTabView(
+                groupIndex: 0,
+                transitionProgress: transitionProgress,
+                slideDirection: slideDirection,
+                transitionWidth: transitionWidth,
+                isSelected: isSelected
+            )
         case .patchesSecond:
-            AvatarCacheTabView(groupIndex: 1, showsBackdrop: showsBackdrop)
+            AvatarCacheTabView(
+                groupIndex: 1,
+                transitionProgress: transitionProgress,
+                slideDirection: slideDirection,
+                transitionWidth: transitionWidth,
+                isSelected: isSelected
+            )
         case .deviceInfo:
-            LiquidGlassDeviceInfoTabView(showsBackdrop: showsBackdrop)
+            LiquidGlassDeviceInfoTabView(
+                transitionProgress: transitionProgress,
+                slideDirection: slideDirection,
+                transitionWidth: transitionWidth,
+                isSelected: isSelected
+            )
         case .files:
             AppDataBrowserView(
                 tabSession: filesTabSession,
@@ -206,24 +222,22 @@ struct ContentView: View {
         let currentIndex = sections.firstIndex { $0.rawValue == tabNavigation.selectedTab } ?? 0
         let nextIndex = sections.firstIndex { $0.rawValue == selectedTab } ?? currentIndex
         tabSlideDirection = nextIndex >= currentIndex ? .forward : .backward
-        withAnimation(.easeInOut(duration: 0.272)) {
+
+        let token = UUID()
+        tabTransitionToken = token
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            tabTransitionProgress = 0
             tabNavigation.select(selectedTab)
         }
-    }
 
-    private func slideBlurTransition(width: CGFloat) -> AnyTransition {
-        let direction: CGFloat = tabSlideDirection == .forward ? 1 : -1
-        let horizontalOffset = width * direction
-        return .asymmetric(
-            insertion: .modifier(
-                active: SlideBlurTransitionModifier(horizontalOffset: horizontalOffset, blurRadius: 12),
-                identity: SlideBlurTransitionModifier(horizontalOffset: 0, blurRadius: 0)
-            ),
-            removal: .modifier(
-                active: SlideBlurTransitionModifier(horizontalOffset: -horizontalOffset, blurRadius: 12),
-                identity: SlideBlurTransitionModifier(horizontalOffset: 0, blurRadius: 0)
-            )
-        )
+        DispatchQueue.main.async {
+            guard tabTransitionToken == token else { return }
+            withAnimation(.easeInOut(duration: 0.272)) {
+                tabTransitionProgress = 1
+            }
+        }
     }
 
     private var filesTabSession: Binding<FilesTabSession> {
@@ -267,25 +281,6 @@ struct ContentView: View {
 private enum TabSlideDirection {
     case forward
     case backward
-}
-
-private struct SlideBlurTransitionModifier: AnimatableModifier {
-    var horizontalOffset: CGFloat
-    var blurRadius: CGFloat
-
-    var animatableData: AnimatablePair<CGFloat, CGFloat> {
-        get { AnimatablePair(horizontalOffset, blurRadius) }
-        set {
-            horizontalOffset = newValue.first
-            blurRadius = newValue.second
-        }
-    }
-
-    func body(content: Content) -> some View {
-        content
-            .blur(radius: max(0, blurRadius))
-            .offset(x: horizontalOffset)
-    }
 }
 
 private struct CompactTabLabel: View {
