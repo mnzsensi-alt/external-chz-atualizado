@@ -1996,199 +1996,94 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
 private struct MonochromeGlassBackdrop: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private struct LiquidDrop {
+    private struct FluidLobe {
         let center: CGPoint
-        let radius: CGFloat
-    }
-
-    private struct LiquidFrame {
-        let source: CGPoint
-        let pool: CGRect
-        let core: CGPoint
-        let coreRadius: CGFloat
-        let drops: [LiquidDrop]
-    }
-
-    private static let cycleDuration = 14.0
-    private static let fusionTimes = [1.1, 2.2, 3.3, 4.4, 5.5]
-
-    private static func clamp(_ value: Double) -> Double {
-        min(max(value, 0), 1)
+        let horizontalRadius: CGFloat
+        let verticalRadius: CGFloat
     }
 
     private static func smoothstep(_ value: Double) -> Double {
-        let t = clamp(value)
+        let t = min(max(value, 0), 1)
         return t * t * (3 - 2 * t)
-    }
-
-    private static func makeFrame(elapsed: Double, size: CGSize) -> LiquidFrame {
-        let cycleIndex = Int(elapsed / cycleDuration)
-        let phase = elapsed.truncatingRemainder(dividingBy: cycleDuration)
-        let rightSide = cycleIndex.isMultiple(of: 2)
-        let direction: CGFloat = rightSide ? 1 : -1
-        let sourceX = size.width * (rightSide ? 0.17 : 0.83)
-        let source = CGPoint(x: sourceX, y: size.height * 0.84)
-        let target = CGPoint(
-            x: size.width * (rightSide ? 0.34 : 0.66),
-            y: size.height * 0.66
-        )
-        let destination = CGPoint(
-            x: size.width * (rightSide ? 0.56 : 0.44),
-            y: -size.height * 0.42
-        )
-        let pool = CGRect(
-            x: sourceX - size.width * 0.17,
-            y: size.height - 28,
-            width: size.width * 0.34,
-            height: 112
-        )
-
-        var drops: [LiquidDrop] = []
-        var growth = 0.0
-        for index in fusionTimes.indices {
-            let fusionTime = fusionTimes[index]
-            let spawnTime = fusionTime - 0.88
-
-            if phase >= spawnTime && phase < fusionTime {
-                let progress = clamp((phase - spawnTime) / (fusionTime - spawnTime))
-                let eased = smoothstep(progress)
-                let sideWave: CGFloat = index.isMultiple(of: 2) ? -1 : 1
-                let arc = CGFloat(sin(progress * Double.pi)) * size.width * 0.035 * sideWave
-                let start = CGPoint(
-                    x: source.x + direction * size.width * 0.025 * sideWave,
-                    y: size.height - 75
-                )
-                let center = CGPoint(
-                    x: start.x + (target.x - start.x) * CGFloat(eased) + arc,
-                    y: start.y + (target.y - start.y) * CGFloat(eased)
-                        - CGFloat(sin(progress * Double.pi)) * size.height * 0.035
-                )
-                let radius = 6 + CGFloat(sin(progress * Double.pi)) * 2.5
-                drops.append(LiquidDrop(center: center, radius: radius))
-            }
-
-            growth += smoothstep((phase - fusionTime) / 0.38)
-        }
-
-        let releaseStart = fusionTimes[fusionTimes.count - 1] + 0.68
-        let releaseProgress = clamp((phase - releaseStart) / 4.0)
-        let core = CGPoint(
-            x: target.x + (destination.x - target.x) * CGFloat(releaseProgress),
-            y: target.y + (destination.y - target.y) * CGFloat(releaseProgress)
-        )
-        let shrink = releaseProgress > 0.72
-            ? max(0.24, 1 - (releaseProgress - 0.72) * 1.8)
-            : 1
-        let coreRadius = (15 + CGFloat(growth) * 7.2) * CGFloat(shrink)
-
-        return LiquidFrame(
-            source: source,
-            pool: pool,
-            core: core,
-            coreRadius: coreRadius,
-            drops: drops
-        )
     }
 
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(white: 0.055), Color.black, Color(white: 0.035)],
+                colors: [Color(white: 0.105), Color(white: 0.065), Color(white: 0.095)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            Circle()
-                .fill(Color.white.opacity(0.04))
-                .frame(width: 310, height: 310)
-                .blur(radius: 95)
-                .offset(x: 150, y: -265)
-            Circle()
-                .fill(Color.gray.opacity(0.075))
-                .frame(width: 270, height: 270)
-                .blur(radius: 100)
-                .offset(x: -165, y: 270)
-            Circle()
-                .fill(Color.white.opacity(0.02))
-                .frame(width: 190, height: 190)
-                .blur(radius: 75)
-                .offset(x: 145, y: 390)
             TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
                 Canvas { context, size in
                     guard size.width > 0, size.height > 0 else { return }
                     let elapsed = timeline.date.timeIntervalSinceReferenceDate
-                    let liquid = Self.makeFrame(elapsed: elapsed, size: size)
-
-                    context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black))
-                    context.fill(Path(ellipseIn: liquid.pool), with: .color(.white))
-
-                    let poolLip = CGRect(
-                        x: liquid.source.x - size.width * 0.105,
-                        y: size.height - 67,
-                        width: size.width * 0.21,
-                        height: 76
-                    )
-                    context.fill(Path(ellipseIn: poolLip), with: .color(.white))
-
-                    for drop in liquid.drops {
-                        let dropRect = CGRect(
-                            x: drop.center.x - drop.radius,
-                            y: drop.center.y - drop.radius,
-                            width: drop.radius * 2,
-                            height: drop.radius * 2
+                    let motion = elapsed * 0.14
+                    let centers = [
+                        CGPoint(
+                            x: size.width * CGFloat(0.17 + 0.055 * sin(motion * 0.83)),
+                            y: size.height * CGFloat(0.31 + 0.075 * cos(motion * 0.71))
+                        ),
+                        CGPoint(
+                            x: size.width * CGFloat(0.50 + 0.095 * sin(motion * 0.69 + 1.8)),
+                            y: size.height * CGFloat(0.54 + 0.085 * cos(motion * 0.77 + 0.6))
+                        ),
+                        CGPoint(
+                            x: size.width * CGFloat(0.83 + 0.055 * sin(motion * 0.74 + 2.4)),
+                            y: size.height * CGFloat(0.33 + 0.08 * cos(motion * 0.62 + 2.0))
+                        ),
+                        CGPoint(
+                            x: size.width * CGFloat(0.60 + 0.09 * sin(motion * 0.67 + 4.2)),
+                            y: size.height * CGFloat(0.79 + 0.065 * cos(motion * 0.81 + 1.3))
                         )
-                        context.fill(Path(ellipseIn: dropRect), with: .color(.white))
+                    ]
+                    let lobes = centers.enumerated().map { index, center in
+                        let wave = motion * 0.9 + Double(index) * 1.35
+                        return FluidLobe(
+                            center: center,
+                            horizontalRadius: size.width * CGFloat(0.105 + 0.02 * sin(wave)),
+                            verticalRadius: size.height * CGFloat(0.075 + 0.014 * cos(wave * 0.83))
+                        )
                     }
+                    let links = [(0, 1), (1, 2), (2, 3), (3, 0), (0, 2)]
 
-                    let coreRect = CGRect(
-                        x: liquid.core.x - liquid.coreRadius,
-                        y: liquid.core.y - liquid.coreRadius * 1.08,
-                        width: liquid.coreRadius * 2,
-                        height: liquid.coreRadius * 2.16
-                    )
-                    context.fill(Path(ellipseIn: coreRect), with: .color(.white))
-                }
-                .blur(radius: 11)
-                .contrast(18)
-                .opacity(0.15)
-                .blendMode(.screen)
+                    for (index, pair) in links.enumerated() {
+                        let first = lobes[pair.0].center
+                        let second = lobes[pair.1].center
+                        let wave = 0.5 + 0.5 * sin(elapsed * 0.19 + Double(index) * 1.55)
+                        let strength = CGFloat(Self.smoothstep((wave - 0.2) / 0.62))
+                        let width = min(size.width * 0.21, 84) * strength
+                        guard width > 0.25 else { continue }
 
-                Canvas { context, size in
-                    guard size.width > 0, size.height > 0 else { return }
-                    let elapsed = timeline.date.timeIntervalSinceReferenceDate
-                    let liquid = Self.makeFrame(elapsed: elapsed, size: size)
-                    let radius = liquid.coreRadius
-
-                    if liquid.core.y > -radius && liquid.core.y < size.height + radius {
-                        var highlight = Path()
-                        highlight.addArc(
-                            center: liquid.core,
-                            radius: radius * 0.62,
-                            startAngle: .degrees(205),
-                            endAngle: .degrees(270),
-                            clockwise: false
+                        let control = CGPoint(
+                            x: (first.x + second.x) * 0.5
+                                + size.width * CGFloat(sin(motion * 0.71 + Double(index))) * 0.11,
+                            y: (first.y + second.y) * 0.5
+                                + size.height * CGFloat(cos(motion * 0.63 + Double(index) * 1.2)) * 0.09
                         )
+                        var path = Path()
+                        path.move(to: first)
+                        path.addQuadCurve(to: second, control: control)
                         context.stroke(
-                            highlight,
-                            with: .color(Color.white.opacity(0.25)),
-                            style: StrokeStyle(lineWidth: 1.2, lineCap: .round)
+                            path,
+                            with: .color(Color.black.opacity(0.98)),
+                            style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
                         )
                     }
 
-                    for drop in liquid.drops {
-                        let glint = CGRect(
-                            x: drop.center.x - drop.radius * 0.25,
-                            y: drop.center.y - drop.radius * 0.48,
-                            width: drop.radius * 0.58,
-                            height: drop.radius * 0.22
+                    for lobe in lobes {
+                        let bounds = CGRect(
+                            x: lobe.center.x - lobe.horizontalRadius,
+                            y: lobe.center.y - lobe.verticalRadius,
+                            width: lobe.horizontalRadius * 2,
+                            height: lobe.verticalRadius * 2
                         )
-                        context.fill(
-                            Path(ellipseIn: glint),
-                            with: .color(Color.white.opacity(0.24))
-                        )
+                        context.fill(Path(ellipseIn: bounds), with: .color(Color.black))
                     }
                 }
-                .blendMode(.screen)
-                .opacity(0.7)
+                .blur(radius: 8)
+                .opacity(0.96)
+                .blendMode(.multiply)
             }
         }
         .ignoresSafeArea()
