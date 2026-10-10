@@ -2010,7 +2010,7 @@ private struct MonochromeGlassBackdrop: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(white: 0.105), Color(white: 0.065), Color(white: 0.095)],
+                colors: [Color.black, Color(white: 0.075), Color(white: 0.02)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -2018,7 +2018,7 @@ private struct MonochromeGlassBackdrop: View {
                 Canvas { context, size in
                     guard size.width > 0, size.height > 0 else { return }
                     let elapsed = timeline.date.timeIntervalSinceReferenceDate
-                    let motion = elapsed * 0.14
+                    let motion = elapsed * 0.17
                     let centers = [
                         CGPoint(
                             x: size.width * CGFloat(0.17 + 0.055 * sin(motion * 0.83)),
@@ -2041,8 +2041,8 @@ private struct MonochromeGlassBackdrop: View {
                         let wave = motion * 0.9 + Double(index) * 1.35
                         return FluidLobe(
                             center: center,
-                            horizontalRadius: size.width * CGFloat(0.105 + 0.02 * sin(wave)),
-                            verticalRadius: size.height * CGFloat(0.075 + 0.014 * cos(wave * 0.83))
+                            horizontalRadius: size.width * CGFloat((0.105 + 0.02 * sin(wave)) * 1.15),
+                            verticalRadius: size.height * CGFloat((0.075 + 0.014 * cos(wave * 0.83)) * 1.15)
                         )
                     }
                     let links = [(0, 1), (1, 2), (2, 3), (3, 0), (0, 2)]
@@ -2050,9 +2050,9 @@ private struct MonochromeGlassBackdrop: View {
                     for (index, pair) in links.enumerated() {
                         let first = lobes[pair.0].center
                         let second = lobes[pair.1].center
-                        let wave = 0.5 + 0.5 * sin(elapsed * 0.19 + Double(index) * 1.55)
+                        let wave = 0.5 + 0.5 * sin(elapsed * 0.23 + Double(index) * 1.55)
                         let strength = CGFloat(Self.smoothstep((wave - 0.2) / 0.62))
-                        let width = min(size.width * 0.21, 84) * strength
+                        let width = min(size.width * 0.273, 110) * strength
                         guard width > 0.25 else { continue }
 
                         let control = CGPoint(
