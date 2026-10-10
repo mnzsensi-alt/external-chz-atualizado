@@ -1736,3 +1736,383 @@ private struct DeviceInfoGlassCard: View {
         .shadow(color: Color.black.opacity(0.045), radius: 12, x: 0, y: 5)
     }
 }
+
+
+struct AvatarCacheTabView: View {
+    @EnvironmentObject private var store: PatchProjectStore
+    @State private var pendingStates: [UUID: Bool] = [:]
+
+    let groupIndex: Int
+
+    private var filenames: [String] {
+        if groupIndex == 0 {
+            return [
+                "FF - Hs Pescoço 100-.3105",
+                "FF - Hs Alto 100-.3105",
+                "HS PESCOÇO - ANTENA-2.3105",
+                "FF - Hs Pescoço-Alto.3105"
+            ]
+        }
+        return [
+            "420 i.3105",
+            "FF - Hs Alto Baypss.3105",
+            "HS 100-.3105",
+            "HS PESCOÇO.3105"
+        ]
+    }
+
+    private var options: [BundledPatchOption] {
+        filenames.compactMap { BundledPatchCatalog.option(for: $0) }
+    }
+
+    private var tabTitle: String {
+        groupIndex == 0 ? "Avatar" : "Cache"
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                MonochromeGlassBackdrop()
+                ScrollView {
+                    VStack(spacing: 13) {
+                        ForEach(options) { option in
+                            patchRow(option)
+                        }
+                    }
+                    .padding(.horizontal, 17)
+                    .padding(.top, 22)
+                    .padding(.bottom, 34)
+                }
+                .scrollIndicators(.hidden)
+            }
+            .navigationTitle(tabTitle)
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .tint(AppTheme.accent)
+        .onChange(of: store.isBusy) { busy in
+            if !busy { pendingStates.removeAll() }
+        }
+    }
+
+    private func patchRow(_ option: BundledPatchOption) -> some View {
+        let name = displayName(for: option)
+        let item = store.bundledItem(for: option)
+        let active = item.map { requestedState(for: $0.id) } ?? false
+
+        return HStack(spacing: 13) {
+            Text(name)
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 6)
+            Toggle(isOn: Binding(
+                get: { item.map { requestedState(for: $0.id) } ?? false },
+                set: { isOn in
+                    guard let item else { return }
+                    setActive(isOn, for: item.id)
+                }
+            )) {
+                Text(name)
+            }
+            .labelsHidden()
+            .toggleStyle(LiquidGlassToggleStyle())
+            .accessibilityLabel(name)
+            .accessibilityValue(active ? "Ligado" : "Desligado")
+            .disabled(store.isBusy || item?.project == nil)
+        }
+        .padding(.horizontal, 17)
+        .padding(.vertical, 15)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.13),
+                                    Color.white.opacity(0.035),
+                                    Color.black.opacity(0.17)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+        }
+        .overlay(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .fill(
+                    RadialGradient(
+                        colors: [Color.white.opacity(0.13), .clear],
+                        center: .topLeading,
+                        startRadius: 0,
+                        endRadius: 250
+                    )
+                )
+                .allowsHitTesting(false)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.42),
+                            Color.white.opacity(0.075),
+                            Color.gray.opacity(0.19)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.9
+                )
+        }
+        .shadow(color: Color.black.opacity(0.42), radius: 22, x: 0, y: 12)
+    }
+
+    private func displayName(for option: BundledPatchOption) -> String {
+        switch option.filename {
+        case "420 i.3105": return "420 i"
+        case "FF - Hs Alto 100-.3105": return "Alto 100%"
+        case "FF - Hs Alto Baypss.3105": return "Alto Bypass"
+        case "FF - Hs Pescoço 100-.3105": return "Pescoço 100%"
+        case "FF - Hs Pescoço-Alto.3105": return "Pescoço + Alto"
+        case "HS 100-.3105": return "HS 100%"
+        case "HS PESCOÇO - ANTENA-2.3105": return "Pescoço + Antena"
+        case "HS PESCOÇO.3105": return "Pescoço"
+        default: return option.packageName
+        }
+    }
+
+    private func requestedState(for projectID: UUID) -> Bool {
+        pendingStates[projectID] ?? store.isApplied(projectID)
+    }
+
+    private func setActive(_ active: Bool, for projectID: UUID) {
+        guard !store.isBusy else { return }
+        if active {
+            for item in store.items where store.isBundledPatch(item.id) {
+                pendingStates[item.id] = false
+            }
+        }
+        pendingStates[projectID] = active
+        store.setBundledPatch(projectID, active: active)
+    }
+}
+
+private struct LiquidGlassToggleStyle: ToggleStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.78)) {
+                configuration.isOn.toggle()
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Text(configuration.isOn ? "LIGADO" : "DESLIGADO")
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .tracking(0.5)
+                    .foregroundStyle(Color.white.opacity(configuration.isOn ? 0.96 : 0.68))
+                    .frame(width: 54, alignment: .trailing)
+
+                ZStack(alignment: configuration.isOn ? .trailing : .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(configuration.isOn ? 0.17 : 0.07))
+                        .overlay {
+                            Capsule().strokeBorder(Color.white.opacity(0.28), lineWidth: 0.8)
+                        }
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white, Color.gray.opacity(0.78)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 25, height: 25)
+                        .padding(4)
+                        .shadow(color: Color.black.opacity(0.42), radius: 6, x: 0, y: 2)
+                }
+                .frame(width: 60, height: 34)
+            }
+            .padding(.leading, 10)
+            .padding(.trailing, 5)
+            .frame(height: 44)
+            .background(.ultraThinMaterial, in: Capsule())
+            .background {
+                Capsule().fill(Color.white.opacity(configuration.isOn ? 0.105 : 0.035))
+            }
+            .overlay {
+                Capsule().strokeBorder(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.42), Color.white.opacity(0.09)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.9
+                )
+            }
+            .opacity(isEnabled ? 1 : 0.44)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(configuration.isOn ? "Desligar" : "Ligar")
+        .accessibilityValue(configuration.isOn ? "Ligado" : "Desligado")
+        .accessibilityAddTraits(.isButton)
+        .disabled(!isEnabled)
+    }
+}
+
+private struct MonochromeGlassBackdrop: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(white: 0.075), Color.black, Color(white: 0.045)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Circle()
+                .fill(Color.white.opacity(0.055))
+                .frame(width: 310, height: 310)
+                .blur(radius: 95)
+                .offset(x: 150, y: -265)
+            Circle()
+                .fill(Color.gray.opacity(0.105))
+                .frame(width: 270, height: 270)
+                .blur(radius: 100)
+                .offset(x: -165, y: 270)
+            Circle()
+                .fill(Color.white.opacity(0.025))
+                .frame(width: 190, height: 190)
+                .blur(radius: 75)
+                .offset(x: 145, y: 390)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+}
+
+struct LiquidGlassDeviceInfoTabView: View {
+    private var compatible: Bool {
+        let version = AppInfo.versionTuple
+        return ExploitSupportPolicy.isSupported(
+            major: version.major,
+            minor: version.minor,
+            patch: version.patch,
+            build: AppInfo.osBuild
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                MonochromeGlassBackdrop()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        infoCard(
+                            symbol: "iphone",
+                            title: "MODELO DO DISPOSITIVO",
+                            value: UIDevice.current.model,
+                            detail: AppInfo.displayMachineName
+                        )
+                        infoCard(
+                            symbol: "gearshape",
+                            title: "VERSÃO DO iOS",
+                            value: "iOS \(AppInfo.osVersion)",
+                            detail: "Build \(AppInfo.osBuild)"
+                        )
+                        infoCard(
+                            symbol: compatible ? "checkmark.shield" : "info.circle",
+                            title: "COMPATIBILIDADE DO 3105",
+                            value: compatible ? "Dentro da faixa suportada" : "Fora da faixa verificada",
+                            detail: compatible
+                                ? "Esta versão do iOS está na faixa verificada para o exploit do 3105."
+                                : "Esta versão do iOS não está na faixa verificada no código do 3105."
+                        )
+                        Text("A aplicação dos patches também depende do app-alvo e do acesso aos arquivos dele neste dispositivo.")
+                            .font(.footnote)
+                            .foregroundStyle(.white.opacity(0.62))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 4)
+                            .padding(.top, 3)
+                    }
+                    .padding(.horizontal, 17)
+                    .padding(.top, 22)
+                    .padding(.bottom, 34)
+                }
+                .scrollIndicators(.hidden)
+            }
+            .navigationTitle("Dispositivo")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .tint(AppTheme.accent)
+    }
+
+    private func infoCard(
+        symbol: String,
+        title: String,
+        value: String,
+        detail: String
+    ) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.24), lineWidth: 0.8)
+                }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.caption2.weight(.bold))
+                    .tracking(0.9)
+                    .foregroundStyle(.white.opacity(0.62))
+                Text(value)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(.white.opacity(0.62))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.13),
+                                    Color.white.opacity(0.035),
+                                    Color.black.opacity(0.17)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.40), Color.white.opacity(0.07), Color.gray.opacity(0.18)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.9
+                )
+        }
+        .shadow(color: Color.black.opacity(0.42), radius: 22, x: 0, y: 12)
+    }
+}

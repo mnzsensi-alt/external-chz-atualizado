@@ -1093,7 +1093,10 @@ private struct RepositoryStorePresentationModifier: ViewModifier {
                 if let repositoryAlert = store.alert {
                     return .repository(repositoryAlert)
                 }
-                if let patchAlert = patchStore.alert {
+                if let patchAlert = patchStore.alert,
+                   !(patchAlert.titleKey == "common.done"
+                     && ["patch.applied_message", "patch.restored_message"]
+                        .contains(patchAlert.messageKey)) {
                     return .patch(patchAlert)
                 }
                 return nil

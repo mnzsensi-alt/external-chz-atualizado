@@ -67,6 +67,7 @@ struct ContentView: View {
         .sheet(isPresented: $showLogs) { LogView() }
         .patchStorePresentation(patchStore)
         .repositoryStorePresentation(repositoryStore, patchStore: patchStore)
+        .preferredColorScheme(.dark)
     }
 
     private var compactLayout: some View {
@@ -137,11 +138,11 @@ struct ContentView: View {
                 onOpenLogs: openLogs
             )
         case .installed:
-            BundledPatchesTabView(groupIndex: 0)
+            AvatarCacheTabView(groupIndex: 0)
         case .patchesSecond:
-            BundledPatchesTabView(groupIndex: 1)
+            AvatarCacheTabView(groupIndex: 1)
         case .deviceInfo:
-            DeviceInfoTabView()
+            LiquidGlassDeviceInfoTabView()
         case .files:
             AppDataBrowserView(
                 tabSession: filesTabSession,
@@ -236,8 +237,8 @@ private extension AppSection {
 
     func displayTitle(language: AppLanguage) -> String {
         switch self {
-        case .installed: return "Patches 1–4"
-        case .patchesSecond: return "Patches 5–8"
+        case .installed: return "Avatar"
+        case .patchesSecond: return "Cache"
         case .deviceInfo: return "Dispositivo"
         default: return language.text(titleKey)
         }
@@ -248,10 +249,10 @@ private extension AppSection {
         case .home: return "house.fill"
         case .new: return "clock.fill"
         case .sources: return "shippingbox.fill"
-        case .installed: return "tray.full.fill"
+        case .installed: return "person.crop.circle.fill"
         case .files: return "folder.fill"
         case .search: return "magnifyingglass"
-        case .patchesSecond: return "square.grid.2x2.fill"
+        case .patchesSecond: return "externaldrive.fill"
         case .deviceInfo: return "iphone"
         }
     }
