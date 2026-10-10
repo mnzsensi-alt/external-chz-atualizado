@@ -226,6 +226,9 @@
 "patch.error.app_unavailable" = "The app bundle %@ is not installed or cannot be opened. No patch files were changed.";
 "patch.error.target_occupied" = "The target %@ is already patched by another project. Restore that patch before applying this one.";
 "patch.error.target_missing" = "The game file was not found, so this patch was not applied: %@";
+"patch.bundled.loading" = "Loading bundled patch…";
+"patch.bundled.unavailable" = "NOT LOADED · TAP TO RETRY";
+"patch.bundled.retry_hint" = "Tap to retry loading this bundled patch.";
 "patch.error.already_applied" = "This patch is already active. Reset it or restore the originals before applying it again.";
 "patch.error.restore_targets_changed" = "These files changed after apply and require confirmation before restoration:\n%@";
 "patch.error.active_delete" = "This patch is still active. Restore its original files before deleting the package.";

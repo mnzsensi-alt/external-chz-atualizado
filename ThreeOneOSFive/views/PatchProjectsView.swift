@@ -1739,6 +1739,7 @@ private struct DeviceInfoGlassCard: View {
 
 
 struct AvatarCacheTabView: View {
+    @Environment(\.appLanguage) private var language
     @EnvironmentObject private var store: PatchProjectStore
     @State private var pendingStates: [UUID: Bool] = [:]
 
@@ -1802,7 +1803,6 @@ struct AvatarCacheTabView: View {
     private func patchRow(_ option: BundledPatchOption) -> some View {
         let name = displayName(for: option)
         let item = store.bundledItem(for: option)
-        let active = item.map { requestedState(for: $0.id) } ?? false
 
         return HStack(spacing: 13) {
             Text(name)
@@ -1813,20 +1813,7 @@ struct AvatarCacheTabView: View {
                 .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 6)
-            Toggle(isOn: Binding(
-                get: { item.map { requestedState(for: $0.id) } ?? false },
-                set: { isOn in
-                    guard let item else { return }
-                    setActive(isOn, for: item.id)
-                }
-            )) {
-                Text(name)
-            }
-            .labelsHidden()
-            .toggleStyle(LiquidGlassToggleStyle())
-            .accessibilityLabel(name)
-            .accessibilityValue(active ? "Ligado" : "Desligado")
-            .disabled(store.isBusy || item?.project == nil)
+            patchControl(name: name, item: item)
         }
         .padding(.horizontal, 17)
         .padding(.vertical, 15)
@@ -1877,6 +1864,48 @@ struct AvatarCacheTabView: View {
                 )
         }
         .shadow(color: Color.black.opacity(0.42), radius: 22, x: 0, y: 12)
+    }
+
+    @ViewBuilder
+    private func patchControl(
+        name: String,
+        item: PatchLibraryItem?
+    ) -> some View {
+        if let item, item.project != nil || store.isApplied(item.id) {
+            Toggle(isOn: Binding(
+                get: { requestedState(for: item.id) },
+                set: { isOn in setActive(isOn, for: item.id) }
+            )) {
+                Text(name)
+            }
+            .labelsHidden()
+            .toggleStyle(LiquidGlassToggleStyle())
+            .accessibilityLabel(name)
+            .accessibilityValue(requestedState(for: item.id) ? "Ligado" : "Desligado")
+            .disabled(store.isBusy || (item.project == nil && !store.isApplied(item.id)))
+        } else if store.isBusy {
+            ProgressView()
+                .controlSize(.small)
+                .tint(.white)
+                .frame(minWidth: 90)
+                .accessibilityLabel(language.text("patch.bundled.loading"))
+        } else {
+            Button {
+                store.retryBundledPatches()
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "arrow.clockwise")
+                    Text(language.text("patch.bundled.unavailable"))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+                .font(.system(size: 9, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.78))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(language.text("patch.bundled.unavailable"))
+            .accessibilityHint(language.text("patch.bundled.retry_hint"))
+        }
     }
 
     private func displayName(for option: BundledPatchOption) -> String {
