@@ -76,6 +76,8 @@ struct ContentView: View {
     private var compactLayout: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
+                MonochromeGlassBackdrop()
+
                 TabView(selection: tabSelection) {
                     ForEach(featureVisibility.visibleSections) { section in
                         Color.clear
@@ -91,6 +93,10 @@ struct ContentView: View {
                             .tag(section.rawValue)
                     }
                 }
+                .background {
+                    MonochromeGlassBackdrop()
+                }
+                .toolbarBackground(.hidden, for: .tabBar)
 
                 ZStack {
                     sectionContent(selectedVisibleSection)

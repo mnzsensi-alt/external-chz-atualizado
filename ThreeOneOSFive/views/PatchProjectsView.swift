@@ -2003,7 +2003,7 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
     }
 }
 
-private struct MonochromeGlassBackdrop: View {
+struct MonochromeGlassBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
