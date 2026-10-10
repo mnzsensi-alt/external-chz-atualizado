@@ -299,6 +299,8 @@ struct PatchProjectsView: View {
 
     @ViewBuilder
     private var listRows: some View {
+        bundledPatchTabSection
+        bundledPatchOptionsSection
         if !hasLocalContent && (store.isBusy || isImportingWallpapers) {
             loadingState
                 .listRowSeparator(.hidden)
@@ -309,8 +311,6 @@ struct PatchProjectsView: View {
             searchEmptyState
                 .listRowSeparator(.hidden)
         } else {
-            bundledPatchTabSection
-            bundledPatchOptionsSection
             regularPatchSection
             wallpaperSection
         }
@@ -339,6 +339,8 @@ struct PatchProjectsView: View {
             ForEach(visibleBundledOptions) { option in
                 if let item = store.bundledItem(for: option) {
                     bundledPatchRow(option, item: item)
+                } else if store.isBusy {
+                    bundledPatchLoadingRow(option)
                 } else {
                     bundledPatchUnavailableRow(option)
                 }
@@ -455,6 +457,23 @@ struct PatchProjectsView: View {
         .padding(.vertical, 5)
     }
 
+    private func bundledPatchLoadingRow(_ option: BundledPatchOption) -> some View {
+        HStack(spacing: 12) {
+            AppRowIcon(systemName: "arrow.down.circle")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Opção \(option.number)")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Text(option.filename)
+                    .font(.body.weight(.semibold))
+                    .lineLimit(2)
+            }
+            Spacer()
+            ProgressView()
+        }
+        .padding(.vertical, 5)
+    }
+
     private func bundledPatchUnavailableRow(_ option: BundledPatchOption) -> some View {
         HStack(spacing: 12) {
             AppRowIcon(systemName: "exclamationmark.circle")
@@ -469,9 +488,11 @@ struct PatchProjectsView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Button("Ativar") {}
-                .buttonStyle(.borderedProminent)
-                .disabled(true)
+            Button("Tentar carregar") {
+                store.retryBundledPatches()
+            }
+            .buttonStyle(.bordered)
+            .disabled(store.isBusy)
         }
         .padding(.vertical, 5)
     }

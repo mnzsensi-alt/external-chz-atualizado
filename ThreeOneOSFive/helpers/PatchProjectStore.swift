@@ -142,6 +142,16 @@ final class PatchProjectStore: ObservableObject {
         })
     }
 
+    func retryBundledPatches() {
+        guard !isBusy else { return }
+        isBusy = true
+        Task.detached(priority: .userInitiated) { [weak self] in
+            BundledPatchBootstrap.importIfNeeded()
+            let loadedItems = PatchProjectLibrary.load()
+            await self?.finishInitialLoad(loadedItems)
+        }
+    }
+
     func isApplied(_ projectID: UUID) -> Bool {
         appliedProjectIDs.contains(projectID)
     }
