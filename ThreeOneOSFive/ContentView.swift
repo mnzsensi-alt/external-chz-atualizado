@@ -99,7 +99,7 @@ struct ContentView: View {
                             Text(section.displayTitle(language: language))
                         } icon: {
                             if section == .installed {
-                                ReticleTabIcon()
+                                Image(uiImage: ReticleTabIconImage.image)
                             } else {
                                 Image(systemName: section.systemImage)
                             }
@@ -219,7 +219,7 @@ private struct CompactTabLabel: View {
     @ViewBuilder
     var body: some View {
         if isReticle {
-            ReticleTabIcon()
+            Image(uiImage: ReticleTabIconImage.image)
         } else if let image = UIImage(
             systemName: systemImage,
             withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
@@ -234,35 +234,33 @@ private struct CompactTabLabel: View {
     }
 }
 
-private struct ReticleTabIcon: View {
-    var body: some View {
-        ZStack {
-            Circle()
-                .strokeBorder(Color.white, lineWidth: 1.7)
-                .frame(width: 14, height: 14)
-            RoundedRectangle(cornerRadius: 1)
-                .fill(Color.white)
-                .frame(width: 2, height: 5)
-                .offset(y: -10)
-            RoundedRectangle(cornerRadius: 1)
-                .fill(Color.white)
-                .frame(width: 2, height: 5)
-                .offset(y: 10)
-            RoundedRectangle(cornerRadius: 1)
-                .fill(Color.white)
-                .frame(width: 5, height: 2)
-                .offset(x: -10)
-            RoundedRectangle(cornerRadius: 1)
-                .fill(Color.white)
-                .frame(width: 5, height: 2)
-                .offset(x: 10)
-            Circle()
-                .fill(Color.white)
-                .frame(width: 3.5, height: 3.5)
+private enum ReticleTabIconImage {
+    static let image: UIImage = {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
+        let rendered = renderer.image { _ in
+            UIColor.white.setStroke()
+            let ring = UIBezierPath(ovalIn: CGRect(x: 7.5, y: 7.5, width: 9, height: 9))
+            ring.lineWidth = 1.7
+            ring.stroke()
+
+            let marks = UIBezierPath()
+            marks.move(to: CGPoint(x: 12, y: 1.5))
+            marks.addLine(to: CGPoint(x: 12, y: 6))
+            marks.move(to: CGPoint(x: 12, y: 18))
+            marks.addLine(to: CGPoint(x: 12, y: 22.5))
+            marks.move(to: CGPoint(x: 1.5, y: 12))
+            marks.addLine(to: CGPoint(x: 6, y: 12))
+            marks.move(to: CGPoint(x: 18, y: 12))
+            marks.addLine(to: CGPoint(x: 22.5, y: 12))
+            marks.lineWidth = 1.7
+            marks.lineCapStyle = .round
+            marks.stroke()
+
+            UIColor.white.setFill()
+            UIBezierPath(ovalIn: CGRect(x: 10.6, y: 10.6, width: 2.8, height: 2.8)).fill()
         }
-        .frame(width: 24, height: 24)
-        .accessibilityHidden(true)
-    }
+        return rendered.withRenderingMode(.alwaysTemplate)
+    }()
 }
 
 private extension AppSection {
