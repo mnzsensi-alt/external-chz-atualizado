@@ -13,9 +13,6 @@ struct ContentView: View {
     private var darkModeEnabled = true
     @State private var tabNavigation: AppTabNavigationState
     @State private var tabSlideDirection: TabSlideDirection = .forward
-    @State private var tabTransitionProgress: CGFloat = 1
-    @State private var outgoingTabForTransition: Int?
-    @State private var tabTransitionToken = UUID()
     @State private var showSettings = false
     @State private var showLogs = false
 
@@ -78,22 +75,36 @@ struct ContentView: View {
 
     private var compactLayout: some View {
         GeometryReader { geometry in
-            TabView(selection: tabSelection) {
-                ForEach(featureVisibility.visibleSections) { section in
-                    sectionContent(section)
-                        .modifier(tabContentMotion(for: section, width: geometry.size.width))
-                        .animation(.easeInOut(duration: 0.34), value: tabTransitionProgress)
-                        .tabItem {
-                            CompactTabLabel(
-                                title: section.displayTitle(language: language),
-                                systemImage: section.systemImage,
-                                isReticle: section == .installed,
-                                isProfile: section == .deviceInfo
-                            )
-                        }
-                        .tag(section.rawValue)
+            ZStack(alignment: .top) {
+                TabView(selection: tabSelection) {
+                    ForEach(featureVisibility.visibleSections) { section in
+                        sectionContent(section)
+                            .tabItem {
+                                CompactTabLabel(
+                                    title: section.displayTitle(language: language),
+                                    systemImage: section.systemImage,
+                                    isReticle: section == .installed,
+                                    isProfile: section == .deviceInfo
+                                )
+                            }
+                            .tag(section.rawValue)
+                    }
                 }
+
+                ZStack {
+                    sectionContent(selectedVisibleSection)
+                        .id(selectedVisibleSection.rawValue)
+                        .transition(slideBlurTransition(width: geometry.size.width))
+                }
+                .frame(
+                    width: geometry.size.width,
+                    height: max(0, geometry.size.height - 49 - geometry.safeAreaInsets.bottom),
+                    alignment: .top
+                )
+                .clipped()
+                .animation(.easeInOut(duration: 0.34), value: tabNavigation.selectedTab)
             }
+        }
         }
     }
 
@@ -134,8 +145,9 @@ struct ContentView: View {
             .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 300)
         } detail: {
             sectionContent(selectedVisibleSection)
-                .modifier(tabContentMotion(for: selectedVisibleSection, width: 500))
-                .animation(.easeInOut(duration: 0.34), value: tabTransitionProgress)
+                .id(selectedVisibleSection.rawValue)
+                .transition(slideBlurTransition(width: 500))
+                .animation(.easeInOut(duration: 0.34), value: tabNavigation.selectedTab)
         }
         .navigationSplitViewStyle(.balanced)
     }
@@ -191,38 +203,23 @@ struct ContentView: View {
         let currentIndex = sections.firstIndex { $0.rawValue == tabNavigation.selectedTab } ?? 0
         let nextIndex = sections.firstIndex { $0.rawValue == selectedTab } ?? currentIndex
         tabSlideDirection = nextIndex >= currentIndex ? .forward : .backward
-
-        let token = UUID()
-        tabTransitionToken = token
-        var transaction = Transaction()
-        transaction.disablesAnimations = true
-        withTransaction(transaction) {
-            outgoingTabForTransition = tabNavigation.selectedTab
-            tabTransitionProgress = 0
+        withAnimation(.easeInOut(duration: 0.34)) {
             tabNavigation.select(selectedTab)
-        }
-
-        DispatchQueue.main.async {
-            guard tabTransitionToken == token else { return }
-            withAnimation(.easeInOut(duration: 0.34)) {
-                tabTransitionProgress = 1
-            }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.38) {
-            guard tabTransitionToken == token else { return }
-            outgoingTabForTransition = nil
         }
     }
 
-    private func tabContentMotion(for section: AppSection, width: CGFloat) -> TabContentSlideBlurModifier {
-        let isSelected = section.rawValue == tabNavigation.selectedTab
-        let isOutgoing = !isSelected && outgoingTabForTransition.map { $0 == section.rawValue } == true
+    private func slideBlurTransition(width: CGFloat) -> AnyTransition {
         let direction: CGFloat = tabSlideDirection == .forward ? 1 : -1
-        return TabContentSlideBlurModifier(
-            progress: isSelected || isOutgoing ? tabTransitionProgress : 1,
-            width: width,
-            direction: isOutgoing ? -direction : direction,
-            isOutgoing: isOutgoing
+        let horizontalOffset = width * direction
+        return .asymmetric(
+            insertion: .modifier(
+                active: SlideBlurTransitionModifier(horizontalOffset: horizontalOffset, blurRadius: 12),
+                identity: SlideBlurTransitionModifier(horizontalOffset: 0, blurRadius: 0)
+            ),
+            removal: .modifier(
+                active: SlideBlurTransitionModifier(horizontalOffset: -horizontalOffset, blurRadius: 12),
+                identity: SlideBlurTransitionModifier(horizontalOffset: 0, blurRadius: 0)
+            )
         )
     }
 
@@ -269,23 +266,22 @@ private enum TabSlideDirection {
     case backward
 }
 
-private struct TabContentSlideBlurModifier: AnimatableModifier {
-    var progress: CGFloat
-    let width: CGFloat
-    let direction: CGFloat
-    let isOutgoing: Bool
+private struct SlideBlurTransitionModifier: AnimatableModifier {
+    var horizontalOffset: CGFloat
+    var blurRadius: CGFloat
 
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(horizontalOffset, blurRadius) }
+        set {
+            horizontalOffset = newValue.first
+            blurRadius = newValue.second
+        }
     }
 
     func body(content: Content) -> some View {
-        let clampedProgress = min(max(progress, 0), 1)
-        let motion = isOutgoing ? clampedProgress : 1 - clampedProgress
         content
-            .blur(radius: 12 * motion)
-            .offset(x: width * direction * motion)
+            .blur(radius: max(0, blurRadius))
+            .offset(x: horizontalOffset)
     }
 }
 
