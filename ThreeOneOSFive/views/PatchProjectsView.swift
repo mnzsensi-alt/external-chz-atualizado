@@ -13,6 +13,14 @@ private enum WallpaperPackagePickerPolicy {
     static let allowedContentTypes: [UTType] = [packageType, .data]
 }
 
+private struct PendingBundledPatchAction: Identifiable {
+    let option: BundledPatchOption
+    let itemID: UUID
+    let activate: Bool
+
+    var id: String { "\(itemID.uuidString)-\(activate)" }
+}
+
 struct PatchProjectsView: View {
     @Environment(\.appLanguage) private var language
     @EnvironmentObject private var draftCoordinator: PatchDraftCoordinator
@@ -21,6 +29,8 @@ struct PatchProjectsView: View {
     @State private var showCreate = false
     @State private var showImporter = false
     @State private var showWallpaperImporter = false
+    @State private var selectedBundledTab = 0
+    @State private var pendingBundledAction: PendingBundledPatchAction?
     @State private var showCleaner = false
     @State private var searchText = ""
     @State private var wallpaperPackages: [WallpaperStagedPackage] = []
@@ -34,8 +44,9 @@ struct PatchProjectsView: View {
 
     private var filteredItems: [PatchLibraryItem] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return store.items }
-        return store.items.filter { item in
+        let userItems = store.items.filter { !store.isBundledPatch($0.id) }
+        guard !query.isEmpty else { return userItems }
+        return userItems.filter { item in
             if item.packageURL.lastPathComponent.localizedCaseInsensitiveContains(query) {
                 return true
             }
@@ -66,12 +77,24 @@ struct PatchProjectsView: View {
         }
     }
 
+    private var visibleBundledOptions: [BundledPatchOption] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return BundledPatchCatalog.options.filter { option in
+            option.tabIndex == selectedBundledTab
+                && (query.isEmpty
+                    || option.filename.localizedCaseInsensitiveContains(query)
+                    || "Opção \(option.number)".localizedCaseInsensitiveContains(query))
+        }
+    }
+
     private var hasLocalContent: Bool {
         !store.items.isEmpty || !wallpaperPackages.isEmpty
     }
 
     private var hasSearchResults: Bool {
-        !filteredItems.isEmpty || !filteredWallpaperPackages.isEmpty
+        !filteredItems.isEmpty
+            || !filteredWallpaperPackages.isEmpty
+            || !visibleBundledOptions.isEmpty
     }
 
     init(
@@ -107,6 +130,27 @@ struct PatchProjectsView: View {
                         searchEmptyState
                             .listRowSeparator(.hidden)
                     } else {
+                        Section {
+                            Picker("Grupo de opções", selection: $selectedBundledTab) {
+                                Text("Opções 1–4").tag(0)
+                                Text("Opções 5–8").tag(1)
+                            }
+                            .pickerStyle(.segmented)
+                            .accessibilityLabel("Grupo de opções pré-instaladas")
+                        } header: {
+                            Text("Patches pré-instalados")
+                        }
+                        Section(selectedBundledTab == 0 ? "Opções 1–4" : "Opções 5–8") {
+                            ForEach(visibleBundledOptions) { option in
+                                if let item = store.bundledItem(for: option) {
+                                    bundledPatchRow(option, item: item)
+                                } else {
+                                    bundledPatchUnavailableRow(option)
+                                }
+                            }
+                        } footer: {
+                            Text("Ativar uma opção desativa automaticamente a outra opção pré-instalada que estiver ativa.")
+                        }
                         if !filteredItems.isEmpty {
                             Section(language.text("patch.title")) {
                                 ForEach(filteredItems) { item in
@@ -294,6 +338,35 @@ struct PatchProjectsView: View {
             .onChange(of: draftCoordinator.importRequest?.id) { _ in
                 consumeExternalImport()
             }
+            .confirmationDialog(
+                pendingBundledAction?.activate == true
+                    ? "Ativar patch?"
+                    : "Desativar patch?",
+                isPresented: Binding(
+                    get: { pendingBundledAction != nil },
+                    set: { if !$0 { pendingBundledAction = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let action = pendingBundledAction {
+                    Button(
+                        action.activate ? "Ativar" : "Desativar",
+                        role: action.activate ? nil : .destructive
+                    ) {
+                        store.setBundledPatch(action.itemID, active: action.activate)
+                        pendingBundledAction = nil
+                    }
+                    Button("Cancelar", role: .cancel) {
+                        pendingBundledAction = nil
+                    }
+                }
+            } message: {
+                if let action = pendingBundledAction {
+                    Text(action.activate
+                        ? "Ativar \(action.option.filename). Outra opção pré-instalada ativa será desativada primeiro."
+                        : "Desativar \(action.option.filename) e restaurar o arquivo original.")
+                }
+            }
         }
     }
 
@@ -325,6 +398,60 @@ struct PatchProjectsView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func bundledPatchRow(
+        _ option: BundledPatchOption,
+        item: PatchLibraryItem
+    ) -> some View {
+        let active = store.isApplied(item.id)
+        return HStack(spacing: 12) {
+            AppRowIcon(systemName: active ? "checkmark.circle.fill" : "circle")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Opção \(option.number)")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Text(option.filename)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            Button(active ? "Desativar" : "Ativar") {
+                pendingBundledAction = PendingBundledPatchAction(
+                    option: option,
+                    itemID: item.id,
+                    activate: !active
+                )
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(active ? .orange : AppTheme.accent)
+            .disabled(store.isBusy || item.project == nil)
+            .accessibilityLabel("\(active ? "Desativar" : "Ativar") \(option.filename)")
+        }
+        .padding(.vertical, 5)
+    }
+
+    private func bundledPatchUnavailableRow(_ option: BundledPatchOption) -> some View {
+        HStack(spacing: 12) {
+            AppRowIcon(systemName: "exclamationmark.circle")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Opção \(option.number)")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Text(option.filename)
+                    .font(.body.weight(.semibold))
+                Text("Pacote indisponível")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Ativar") {}
+                .buttonStyle(.borderedProminent)
+                .disabled(true)
+        }
+        .padding(.vertical, 5)
     }
 
     private var cleanerRow: some View {

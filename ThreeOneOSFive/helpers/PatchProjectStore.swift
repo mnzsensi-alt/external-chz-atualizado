@@ -20,10 +20,101 @@ struct PatchStoreAlert: Identifiable {
     }
 }
 
+struct BundledPatchOption: Identifiable, Equatable {
+    let number: Int
+    let filename: String
+
+    var id: String { filename }
+    var projectName: String { (filename as NSString).deletingPathExtension }
+    var tabIndex: Int { number <= 4 ? 0 : 1 }
+}
+
+enum BundledPatchCatalog {
+    static let options: [BundledPatchOption] = [
+        BundledPatchOption(number: 1, filename: "420 i.3105"),
+        BundledPatchOption(number: 2, filename: "FF - Hs Alto 100-.3105"),
+        BundledPatchOption(number: 3, filename: "FF - Hs Alto Baypss.3105"),
+        BundledPatchOption(number: 4, filename: "FF - Hs Pescoço 100-.3105"),
+        BundledPatchOption(number: 5, filename: "FF - Hs Pescoço-Alto.3105"),
+        BundledPatchOption(number: 6, filename: "HS 100-.3105"),
+        BundledPatchOption(number: 7, filename: "HS PESCOÇO - ANTENA-2.3105"),
+        BundledPatchOption(number: 8, filename: "HS PESCOÇO.3105")
+    ]
+
+    static func sourceKey(for packageID: UUID) -> String {
+        "3105.bundled_patch.source.\(packageID.uuidString)"
+    }
+
+    static func option(for filename: String) -> BundledPatchOption? {
+        options.first { $0.filename == filename }
+    }
+}
+
+private enum BundledPatchBootstrap {
+    static func importIfNeeded() {
+        let bundledURLs = Bundle.main.urls(
+            forResourcesWithExtension: "3105",
+            subdirectory: "BundledPatches"
+        ) ?? []
+        let resourceDirectory = Bundle.main.resourceURL?.appendingPathComponent(
+            "BundledPatches",
+            isDirectory: true
+        )
+        let directoryURLs = resourceDirectory.flatMap { directory in
+            try? FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
+            )
+        } ?? []
+        let sources = Array(Set(bundledURLs + directoryURLs))
+            .filter {
+                $0.pathExtension.lowercased() == "3105"
+                    && BundledPatchCatalog.option(for: $0.lastPathComponent) != nil
+            }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        guard !sources.isEmpty else { return }
+
+        var existingIDs = Set(PatchProjectLibrary.load().map(\.id))
+        for sourceURL in sources {
+            do {
+                let data = try PatchProjectLibrary.readPackage(at: sourceURL)
+                let summary = try PatchPackageCodec.inspect(data)
+                let sourceKey = BundledPatchCatalog.sourceKey(for: summary.packageID)
+                guard let option = BundledPatchCatalog.option(for: sourceURL.lastPathComponent) else {
+                    continue
+                }
+                if existingIDs.contains(summary.packageID) {
+                    UserDefaults.standard.set(sourceURL.lastPathComponent, forKey: sourceKey)
+                    continue
+                }
+                guard !summary.isPasswordProtected else {
+                    throw PatchPackageError.invalidProject
+                }
+                let decoded = try PatchPackageCodec.decode(data, password: nil)
+                guard decoded.project.name == option.projectName else {
+                    throw PatchPackageError.invalidProject
+                }
+                // Keep all eight packs available in the library, including packs whose
+                // destinations overlap. The transaction layer blocks overlapping applies.
+                _ = try PatchProjectLibrary.save(
+                    data: data,
+                    projectName: decoded.project.name
+                )
+                existingIDs.insert(summary.packageID)
+                UserDefaults.standard.set(sourceURL.lastPathComponent, forKey: sourceKey)
+            } catch {
+                log("patch: skipped bundled package \(sourceURL.lastPathComponent)")
+            }
+        }
+    }
+}
+
 @MainActor
 final class PatchProjectStore: ObservableObject {
     @Published private(set) var items: [PatchLibraryItem] = []
     @Published private(set) var isBusy = false
+    @Published private(set) var appliedProjectIDs: Set<UUID> = []
     @Published var passwordRequest: PatchPasswordRequest?
     @Published var alert: PatchStoreAlert?
     @Published var unlockErrorKey: String?
@@ -40,6 +131,7 @@ final class PatchProjectStore: ObservableObject {
     init() {
         isBusy = true
         Task.detached(priority: .userInitiated) { [weak self] in
+            BundledPatchBootstrap.importIfNeeded()
             let loadedItems = PatchProjectLibrary.load()
             await self?.finishInitialLoad(loadedItems)
         }
@@ -47,10 +139,77 @@ final class PatchProjectStore: ObservableObject {
 
     func reload() {
         items = PatchProjectLibrary.load()
+        appliedProjectIDs = Set(items.compactMap { item in
+            DevicePatchService.latestReceipt(projectID: item.id) == nil ? nil : item.id
+        })
+    }
+
+    func isApplied(_ projectID: UUID) -> Bool {
+        appliedProjectIDs.contains(projectID)
+    }
+
+    func isBundledPatch(_ projectID: UUID) -> Bool {
+        guard let filename = UserDefaults.standard.string(
+            forKey: BundledPatchCatalog.sourceKey(for: projectID)
+        ) else { return false }
+        return BundledPatchCatalog.option(for: filename) != nil
+    }
+
+    func bundledItem(for option: BundledPatchOption) -> PatchLibraryItem? {
+        items.first { item in
+            UserDefaults.standard.string(
+                forKey: BundledPatchCatalog.sourceKey(for: item.id)
+            ) == option.filename
+        }
+    }
+
+    func setBundledPatch(_ projectID: UUID, active: Bool) {
+        guard !isBusy,
+              let item = items.first(where: { $0.id == projectID }),
+              isBundledPatch(projectID) else { return }
+
+        if active {
+            guard let project = item.project else {
+                present(.invalidProject)
+                return
+            }
+            let activeOthers = items.filter {
+                $0.id != projectID
+                    && isBundledPatch($0.id)
+                    && DevicePatchService.latestReceipt(projectID: $0.id) != nil
+            }
+            runOperation(successMessageKey: "patch.applied_message") {
+                var restoredProjects: [PatchProject] = []
+                do {
+                    for other in activeOthers {
+                        guard let receipt = DevicePatchService.latestReceipt(projectID: other.id) else {
+                            continue
+                        }
+                        try DevicePatchService.restore(receipt: receipt)
+                        if let otherProject = other.project {
+                            restoredProjects.append(otherProject)
+                        }
+                    }
+                    _ = try DevicePatchService.apply(project: project)
+                } catch {
+                    for restoredProject in restoredProjects.reversed() {
+                        _ = try? DevicePatchService.apply(project: restoredProject)
+                    }
+                    throw error
+                }
+            }
+        } else if let receipt = DevicePatchService.latestReceipt(projectID: projectID) {
+            runOperation(successMessageKey: "patch.restored_message") {
+                try DevicePatchService.restore(receipt: receipt)
+            }
+        }
     }
 
     private func finishInitialLoad(_ loadedItems: [PatchLibraryItem]) {
         items = loadedItems
+        appliedProjectIDs = Set(loadedItems.compactMap { item in
+            DevicePatchService.latestReceipt(projectID: item.id) == nil ? nil : item.id
+        })
         isBusy = false
     }
 
