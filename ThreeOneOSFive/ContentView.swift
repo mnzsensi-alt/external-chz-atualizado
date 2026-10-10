@@ -239,25 +239,29 @@ private enum ReticleTabIconImage {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
         let rendered = renderer.image { _ in
             UIColor.white.setStroke()
-            let ring = UIBezierPath(ovalIn: CGRect(x: 7.5, y: 7.5, width: 9, height: 9))
-            ring.lineWidth = 1.7
+            let ring = UIBezierPath(ovalIn: CGRect(x: 3.5, y: 3.5, width: 17, height: 17))
+            ring.lineWidth = 2.0
             ring.stroke()
 
             let marks = UIBezierPath()
-            marks.move(to: CGPoint(x: 12, y: 1.5))
-            marks.addLine(to: CGPoint(x: 12, y: 6))
-            marks.move(to: CGPoint(x: 12, y: 18))
-            marks.addLine(to: CGPoint(x: 12, y: 22.5))
-            marks.move(to: CGPoint(x: 1.5, y: 12))
-            marks.addLine(to: CGPoint(x: 6, y: 12))
-            marks.move(to: CGPoint(x: 18, y: 12))
-            marks.addLine(to: CGPoint(x: 22.5, y: 12))
+            marks.move(to: CGPoint(x: 12, y: 0.8))
+            marks.addLine(to: CGPoint(x: 12, y: 2.3))
+            marks.move(to: CGPoint(x: 12, y: 21.7))
+            marks.addLine(to: CGPoint(x: 12, y: 23.2))
+            marks.move(to: CGPoint(x: 0.8, y: 12))
+            marks.addLine(to: CGPoint(x: 2.3, y: 12))
+            marks.move(to: CGPoint(x: 21.7, y: 12))
+            marks.addLine(to: CGPoint(x: 23.2, y: 12))
             marks.lineWidth = 1.7
             marks.lineCapStyle = .round
             marks.stroke()
 
+            let innerRing = UIBezierPath(ovalIn: CGRect(x: 8.4, y: 8.4, width: 7.2, height: 7.2))
+            innerRing.lineWidth = 1.4
+            innerRing.stroke()
+
             UIColor.white.setFill()
-            UIBezierPath(ovalIn: CGRect(x: 10.6, y: 10.6, width: 2.8, height: 2.8)).fill()
+            UIBezierPath(ovalIn: CGRect(x: 11.15, y: 11.15, width: 1.7, height: 1.7)).fill()
         }
         return rendered.withRenderingMode(.alwaysTemplate)
     }()
