@@ -105,7 +105,6 @@ struct ContentView: View {
                 .animation(.easeInOut(duration: 0.34), value: tabNavigation.selectedTab)
             }
         }
-        }
     }
 
     private var regularLayout: some View {
