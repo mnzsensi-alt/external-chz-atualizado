@@ -2035,14 +2035,36 @@ struct LiquidGlassDeviceInfoTabView: View {
         self.keyExpiresAt = keyExpiresAt
     }
 
-    private var compatible: Bool {
+    private enum CompatibilityStatus {
+        case compatible
+        case incompatible
+        case unconfirmed
+
+        var title: String {
+            switch self {
+            case .compatible: return "Compatível"
+            case .incompatible: return "Incompatível"
+            case .unconfirmed: return "Compatibilidade não confirmada"
+            }
+        }
+    }
+
+    private var compatibilityStatus: CompatibilityStatus {
         let version = AppInfo.versionTuple
-        return ExploitSupportPolicy.isSupported(
+        if ExploitSupportPolicy.isSupported(
             major: version.major,
             minor: version.minor,
             patch: version.patch,
             build: AppInfo.osBuild
-        )
+        ) {
+            return .compatible
+        }
+        switch version.major {
+        case 17, 18, 26:
+            return .incompatible
+        default:
+            return .unconfirmed
+        }
     }
 
     private var maskedKey: String {
@@ -2078,13 +2100,20 @@ struct LiquidGlassDeviceInfoTabView: View {
                     Button {
                         darkModeEnabled.toggle()
                     } label: {
-                        Label(
-                            darkModeEnabled ? "CLARO" : "ESCURO",
-                            systemImage: darkModeEnabled ? "sun.max.fill" : "moon.fill"
-                        )
-                        .font(.system(size: 10, weight: .black, design: .rounded))
-                        .labelStyle(.titleAndIcon)
+                        Image(systemName: darkModeEnabled ? "sun.max.fill" : "moon.fill")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.primary)
+                            .frame(width: 38, height: 38)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay {
+                                Circle()
+                                    .strokeBorder(
+                                        Color.primary.opacity(colorScheme == .dark ? 0.20 : 0.12),
+                                        lineWidth: 0.8
+                                    )
+                            }
                     }
+                    .buttonStyle(.plain)
                     .accessibilityLabel(darkModeEnabled ? "Ativar modo claro" : "Ativar modo escuro")
                 }
             }
@@ -2094,51 +2123,48 @@ struct LiquidGlassDeviceInfoTabView: View {
 
     private var keyStatusCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "key.fill")
-                    .font(.system(size: 14, weight: .bold))
-                Text("TEMPO DE KEY")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(0.8)
-                Spacer(minLength: 4)
-                Text(activationKey == nil ? "AGUARDANDO LOGIN" : "KEY ATIVA")
-                    .font(.system(size: 9, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            .foregroundStyle(.primary)
+            Text("LICENÇA")
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .tracking(0.9)
+                .foregroundStyle(.primary)
 
-            Group {
-                if let keyExpiresAt {
-                    TimelineView(.periodic(from: Date(), by: 1)) { context in
-                        Text(countdownText(until: keyExpiresAt, now: context.date))
-                    }
-                } else {
-                    Text("--D  --:--:--")
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .font(.system(size: 28, weight: .black, design: .rounded))
-            .monospacedDigit()
-            .lineLimit(1)
-            .minimumScaleFactor(0.72)
-            .accessibilityLabel(keyExpiresAt == nil ? "Contagem aguardando login" : "Tempo restante da key")
-
+            licenseInfoRow(title: "KEY", symbol: "key.fill", value: maskedKey)
             Divider()
-
-            HStack(alignment: .bottom, spacing: 10) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("KEY")
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
-                        .tracking(0.8)
-                        .foregroundStyle(.secondary)
-                    Text(maskedKey)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
+            licenseInfoRow(
+                title: "VALIDADE",
+                symbol: "calendar",
+                value: keyExpiresAt.map {
+                    DateFormatter.localizedString(from: $0, dateStyle: .medium, timeStyle: .none)
+                } ?? "Aguardando login"
+            )
+            Divider()
+            HStack(spacing: 10) {
+                Image(systemName: "clock")
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(width: 18)
+                    .foregroundStyle(.primary)
+                Text("TEMPO RESTANTE")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 4)
+                Group {
+                    if let keyExpiresAt {
+                        TimelineView(.periodic(from: Date(), by: 1)) { context in
+                            Text(countdownText(until: keyExpiresAt, now: context.date))
+                        }
+                    } else {
+                        Text("--D --:--:--")
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            }
+            .accessibilityLabel(keyExpiresAt == nil ? "Tempo restante aguardando login" : "Tempo restante")
+
+            HStack {
                 Spacer(minLength: 0)
                 Button(action: copyActivationKey) {
                     Label("COPIAR", systemImage: "doc.on.doc")
@@ -2156,49 +2182,66 @@ struct LiquidGlassDeviceInfoTabView: View {
         .background(profileCardSurface())
     }
 
-    private var deviceSummaryCard: some View {
-        HStack(alignment: .top, spacing: 13) {
-            Image(systemName: "iphone")
-                .font(.system(size: 17, weight: .semibold))
+    private func licenseInfoRow(title: String, symbol: String, value: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .frame(width: 18)
                 .foregroundStyle(.primary)
-                .frame(width: 40, height: 40)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(colorScheme == .dark ? 0.18 : 0.12), lineWidth: 0.8)
-                }
-            VStack(alignment: .leading, spacing: 10) {
-                Text("DISPOSITIVO")
-                    .font(.system(size: 11, weight: .heavy, design: .rounded))
-                    .tracking(0.9)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .tracking(0.7)
                     .foregroundStyle(.secondary)
-                Text("\(UIDevice.current.model) · \(AppInfo.displayMachineName)")
-                    .font(.system(size: 17, weight: .black, design: .rounded))
+                Text(value)
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Label("iOS \(AppInfo.osVersion) · Build \(AppInfo.osBuild)", systemImage: "gearshape.fill")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Label(
-                    compatible ? "COMPATIBILIDADE CONFIRMADA" : "COMPATIBILIDADE NÃO VERIFICADA",
-                    systemImage: compatible ? "checkmark.shield.fill" : "info.circle.fill"
-                )
-                .font(.system(size: 10, weight: .black, design: .rounded))
-                .foregroundStyle(.primary)
-                .fixedSize(horizontal: false, vertical: true)
-                Text(compatible
-                    ? "Esta versão do iOS está na faixa verificada para o 3105."
-                    : "Esta versão do iOS não está na faixa verificada no código do 3105.")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    private var deviceSummaryCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("DISPOSITIVO")
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .tracking(0.9)
+                .foregroundStyle(.primary)
+            deviceInfoRow(title: "MODELO DO IPHONE", symbol: "iphone", value: AppInfo.hardwareDisplayName)
+            Divider()
+            deviceInfoRow(title: "VERSÃO DO iOS", symbol: "gearshape", value: AppInfo.osVersion)
+            Divider()
+            deviceInfoRow(
+                title: "COMPATIBILIDADE",
+                symbol: "exclamationmark.triangle.fill",
+                value: compatibilityStatus.title
+            )
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(profileCardSurface())
+    }
+
+    private func deviceInfoRow(title: String, symbol: String, value: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .tracking(0.7)
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
     }
 
     private func profileCardSurface() -> some View {
