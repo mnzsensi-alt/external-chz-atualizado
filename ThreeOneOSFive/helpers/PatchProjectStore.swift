@@ -198,10 +198,16 @@ final class PatchProjectStore: ObservableObject {
                             restoredProjects.append(otherProject)
                         }
                     }
-                    _ = try DevicePatchService.apply(project: project)
+                    _ = try DevicePatchService.apply(
+                        project: project,
+                        requireExistingTargets: true
+                    )
                 } catch {
                     for restoredProject in restoredProjects.reversed() {
-                        _ = try? DevicePatchService.apply(project: restoredProject)
+                        _ = try? DevicePatchService.apply(
+                            project: restoredProject,
+                            requireExistingTargets: true
+                        )
                     }
                     throw error
                 }

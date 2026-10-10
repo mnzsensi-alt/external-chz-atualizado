@@ -225,6 +225,7 @@
 "patch.error.keychain" = "The remembered unlock key could not be saved or read securely.";
 "patch.error.app_unavailable" = "The app bundle %@ is not installed or cannot be opened. No patch files were changed.";
 "patch.error.target_occupied" = "The target %@ is already patched by another project. Restore that patch before applying this one.";
+"patch.error.target_missing" = "The game file was not found, so this patch was not applied: %@";
 "patch.error.already_applied" = "This patch is already active. Reset it or restore the originals before applying it again.";
 "patch.error.restore_targets_changed" = "These files changed after apply and require confirmation before restoration:\n%@";
 "patch.error.active_delete" = "This patch is still active. Restore its original files before deleting the package.";

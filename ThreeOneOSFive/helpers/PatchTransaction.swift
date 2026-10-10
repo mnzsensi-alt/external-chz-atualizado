@@ -101,6 +101,7 @@ enum PatchTransaction {
         backupRoot: URL,
         containerResolver: (String) throws -> URL,
         beforeWrite: ((Int) throws -> Void)? = nil,
+        requireExistingTargets: Bool = false,
         fileManager: FileManager = .default
     ) throws -> PatchTransactionReceipt {
         guard !project.rules.isEmpty || !project.directories.isEmpty else {
@@ -186,6 +187,11 @@ enum PatchTransaction {
                 allowMissingParents: true,
                 fileManager: fileManager
             )
+            if requireExistingTargets, !fileManager.fileExists(atPath: target.path) {
+                throw PatchPackageError.targetFileMissing(
+                    rule.bundleID + "/" + rule.relativePath
+                )
+            }
             resolvedRules.append(ResolvedRule(rule: rule, containerRoot: root, target: target))
         }
 

@@ -225,6 +225,7 @@
 "patch.error.keychain" = "Không thể lưu hoặc đọc khóa mở gói một cách an toàn.";
 "patch.error.app_unavailable" = "Bundle app %@ chưa được cài hoặc không thể mở. Patch chưa thay đổi file nào.";
 "patch.error.target_occupied" = "Đường dẫn %@ đã được một dự án patch khác áp dụng. Hãy khôi phục patch đó trước khi áp dụng patch này.";
+"patch.error.target_missing" = "Không tìm thấy tệp trong game nên patch chưa được áp dụng: %@";
 "patch.error.already_applied" = "Patch này đang hoạt động. Hãy đặt lại theo gói hoặc khôi phục file gốc trước khi Apply lại.";
 "patch.error.restore_targets_changed" = "Các file sau đã thay đổi sau khi Apply và cần xác nhận trước khi khôi phục:\n%@";
 "patch.error.active_delete" = "Patch này vẫn đang hoạt động. Hãy khôi phục file gốc trước khi xóa gói.";

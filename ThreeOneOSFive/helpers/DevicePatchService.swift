@@ -1,7 +1,10 @@
 import Foundation
 
 enum DevicePatchService {
-    static func apply(project: PatchProject) throws -> PatchTransactionReceipt {
+    static func apply(
+        project: PatchProject,
+        requireExistingTargets: Bool = false
+    ) throws -> PatchTransactionReceipt {
         let bundleIDs = orderedBundleIdentifiers(in: project)
         return try withResolvedContainers(bundleIDs: bundleIDs) { roots in
             try PatchTransaction.apply(
@@ -12,7 +15,8 @@ enum DevicePatchService {
                         throw PatchPackageError.targetAppUnavailable(bundleID)
                     }
                     return root
-                }
+                },
+                requireExistingTargets: requireExistingTargets
             )
         }
     }

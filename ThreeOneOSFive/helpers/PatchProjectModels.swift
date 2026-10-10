@@ -181,6 +181,7 @@ enum PatchPackageError: Error, Equatable {
     case targetAppUnavailable(String)
     case symbolicLinkUnsupported
     case targetOccupied(String)
+    case targetFileMissing(String)
     case projectAlreadyApplied
     case restoreTargetsChanged([String])
     case activePatchCannotBeDeleted
@@ -207,6 +208,7 @@ extension PatchPackageError: LocalizedError {
         case .keychainFailed: return "patch.error.keychain"
         case .targetAppUnavailable: return "patch.error.app_unavailable"
         case .targetOccupied: return "patch.error.target_occupied"
+        case .targetFileMissing: return "patch.error.target_missing"
         case .projectAlreadyApplied: return "patch.error.already_applied"
         case .restoreTargetsChanged: return "patch.error.restore_targets_changed"
         case .activePatchCannotBeDeleted: return "patch.error.active_delete"
@@ -233,6 +235,8 @@ extension PatchPackageError: LocalizedError {
         switch self {
         case .targetAppUnavailable(let bundleID), .targetOccupied(let bundleID):
             return bundleID
+        case .targetFileMissing(let path):
+            return path
         case .restoreTargetsChanged(let paths):
             return paths.joined(separator: "\n")
         default:
