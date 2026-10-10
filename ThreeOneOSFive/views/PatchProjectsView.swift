@@ -335,7 +335,7 @@ struct PatchProjectsView: View {
     }
 
     private var bundledPatchOptionsSection: some View {
-        Section(selectedBundledTab == 0 ? "Opções 1–4" : "Opções 5–8") {
+        Section {
             ForEach(visibleBundledOptions) { option in
                 if let item = store.bundledItem(for: option) {
                     bundledPatchRow(option, item: item)
@@ -343,6 +343,8 @@ struct PatchProjectsView: View {
                     bundledPatchUnavailableRow(option)
                 }
             }
+        } header: {
+            Text(selectedBundledTab == 0 ? "Opções 1–4" : "Opções 5–8")
         } footer: {
             Text("Ativar uma opção desativa automaticamente a outra opção pré-instalada que estiver ativa.")
         }
