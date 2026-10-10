@@ -1994,102 +1994,16 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
 }
 
 private struct MonochromeGlassBackdrop: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private struct FluidLobe {
-        let center: CGPoint
-        let horizontalRadius: CGFloat
-        let verticalRadius: CGFloat
-    }
-
-    private static func smoothstep(_ value: Double) -> Double {
-        let t = min(max(value, 0), 1)
-        return t * t * (3 - 2 * t)
-    }
-
     var body: some View {
-        ZStack {
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(white: 0.045), location: 0),
-                    .init(color: Color(white: 0.045), location: 0.61),
-                    .init(color: Color(white: 0.10), location: 1)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
-                Canvas { context, size in
-                    guard size.width > 0, size.height > 0 else { return }
-                    let elapsed = timeline.date.timeIntervalSinceReferenceDate
-                    let motion = elapsed * 0.20
-                    let centers = [
-                        CGPoint(
-                            x: size.width * CGFloat(0.17 + 0.055 * sin(motion * 0.83)),
-                            y: size.height * CGFloat(0.31 + 0.075 * cos(motion * 0.71))
-                        ),
-                        CGPoint(
-                            x: size.width * CGFloat(0.50 + 0.095 * sin(motion * 0.69 + 1.8)),
-                            y: size.height * CGFloat(0.54 + 0.085 * cos(motion * 0.77 + 0.6))
-                        ),
-                        CGPoint(
-                            x: size.width * CGFloat(0.83 + 0.055 * sin(motion * 0.74 + 2.4)),
-                            y: size.height * CGFloat(0.33 + 0.08 * cos(motion * 0.62 + 2.0))
-                        ),
-                        CGPoint(
-                            x: size.width * CGFloat(0.60 + 0.09 * sin(motion * 0.67 + 4.2)),
-                            y: size.height * CGFloat(0.79 + 0.065 * cos(motion * 0.81 + 1.3))
-                        )
-                    ]
-                    let lobes = centers.enumerated().map { index, center in
-                        let wave = motion * 0.9 + Double(index) * 1.35
-                        return FluidLobe(
-                            center: center,
-                            horizontalRadius: size.width * CGFloat((0.105 + 0.02 * sin(wave)) * 1.15),
-                            verticalRadius: size.height * CGFloat((0.075 + 0.014 * cos(wave * 0.83)) * 1.15)
-                        )
-                    }
-                    let links = [(0, 1), (1, 2), (2, 3), (3, 0)]
-
-                    for (index, pair) in links.enumerated() {
-                        let first = lobes[pair.0].center
-                        let second = lobes[pair.1].center
-                        let wave = 0.5 + 0.5 * sin(elapsed * 0.27 + Double(index) * 1.55)
-                        let strength = CGFloat(Self.smoothstep((wave - 0.42) / 0.5))
-                        let width = min(size.width * 0.17, 70) * strength
-                        guard width > 0.25 else { continue }
-
-                        let control = CGPoint(
-                            x: (first.x + second.x) * 0.5
-                                + size.width * CGFloat(sin(motion * 0.71 + Double(index))) * 0.11,
-                            y: (first.y + second.y) * 0.5
-                                + size.height * CGFloat(cos(motion * 0.63 + Double(index) * 1.2)) * 0.09
-                        )
-                        var path = Path()
-                        path.move(to: first)
-                        path.addQuadCurve(to: second, control: control)
-                        context.stroke(
-                            path,
-                            with: .color(Color.black.opacity(0.98)),
-                            style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
-                        )
-                    }
-
-                    for lobe in lobes {
-                        let bounds = CGRect(
-                            x: lobe.center.x - lobe.horizontalRadius,
-                            y: lobe.center.y - lobe.verticalRadius,
-                            width: lobe.horizontalRadius * 2,
-                            height: lobe.verticalRadius * 2
-                        )
-                        context.fill(Path(ellipseIn: bounds), with: .color(Color.black))
-                    }
-                }
-                .blur(radius: 8)
-                .opacity(0.96)
-                .blendMode(.multiply)
-            }
-        }
+        LinearGradient(
+            gradient: Gradient(stops: [
+                .init(color: Color(white: 0.045), location: 0),
+                .init(color: Color(white: 0.045), location: 0.61),
+                .init(color: Color(white: 0.10), location: 1)
+            ]),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
