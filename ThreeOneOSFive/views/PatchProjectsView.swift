@@ -120,80 +120,7 @@ struct PatchProjectsView: View {
                 )
                 Divider()
                 List {
-                    if !hasLocalContent && (store.isBusy || isImportingWallpapers) {
-                        loadingState
-                            .listRowSeparator(.hidden)
-                    } else if !hasLocalContent {
-                        emptyState
-                            .listRowSeparator(.hidden)
-                    } else if !hasSearchResults && !store.isBusy {
-                        searchEmptyState
-                            .listRowSeparator(.hidden)
-                    } else {
-                        Section {
-                            Picker("Grupo de opções", selection: $selectedBundledTab) {
-                                Text("Opções 1–4").tag(0)
-                                Text("Opções 5–8").tag(1)
-                            }
-                            .pickerStyle(.segmented)
-                            .accessibilityLabel("Grupo de opções pré-instaladas")
-                        } header: {
-                            Text("Patches pré-instalados")
-                        }
-                        Section(selectedBundledTab == 0 ? "Opções 1–4" : "Opções 5–8") {
-                            ForEach(visibleBundledOptions) { option in
-                                if let item = store.bundledItem(for: option) {
-                                    bundledPatchRow(option, item: item)
-                                } else {
-                                    bundledPatchUnavailableRow(option)
-                                }
-                            }
-                        } footer: {
-                            Text("Ativar uma opção desativa automaticamente a outra opção pré-instalada que estiver ativa.")
-                        }
-                        if !filteredItems.isEmpty {
-                            Section(language.text("patch.title")) {
-                                ForEach(filteredItems) { item in
-                                    itemRow(item)
-                                }
-                                .onDelete { offsets in
-                                    offsets.map { filteredItems[$0] }.forEach(store.delete)
-                                }
-                            }
-                        }
-                        if !filteredWallpaperPackages.isEmpty {
-                            Section(language.text("tab.wallpapers")) {
-                                ForEach(filteredWallpaperPackages) { package in
-                                    NavigationLink {
-                                        InstalledWallpaperPackageDetailView(
-                                            package: package,
-                                            onApplied: reloadWallpaperPackages
-                                        )
-                                    } label: {
-                                        wallpaperRow(package)
-                                    }
-                                    .swipeActions(
-                                        edge: .trailing,
-                                        allowsFullSwipe: false
-                                    ) {
-                                        Button(role: .destructive) {
-                                            wallpaperPendingDeletion = package
-                                        } label: {
-                                            Label(
-                                                language.text("common.delete"),
-                                                systemImage: "trash"
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if cleanerEnabled {
-                        Section(language.text("repository.utilities")) {
-                            cleanerRow
-                        }
-                    }
+                    listRows
                 }
                 .listStyle(.insetGrouped)
                 .sheet(isPresented: $showCreate) {
@@ -365,6 +292,99 @@ struct PatchProjectsView: View {
                     Text(action.activate
                         ? "Ativar \(action.option.filename). Outra opção pré-instalada ativa será desativada primeiro."
                         : "Desativar \(action.option.filename) e restaurar o arquivo original.")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var listRows: some View {
+        if !hasLocalContent && (store.isBusy || isImportingWallpapers) {
+            loadingState
+                .listRowSeparator(.hidden)
+        } else if !hasLocalContent {
+            emptyState
+                .listRowSeparator(.hidden)
+        } else if !hasSearchResults && !store.isBusy {
+            searchEmptyState
+                .listRowSeparator(.hidden)
+        } else {
+            bundledPatchTabSection
+            bundledPatchOptionsSection
+            regularPatchSection
+            wallpaperSection
+        }
+        if cleanerEnabled {
+            Section(language.text("repository.utilities")) {
+                cleanerRow
+            }
+        }
+    }
+
+    private var bundledPatchTabSection: some View {
+        Section {
+            Picker("Grupo de opções", selection: $selectedBundledTab) {
+                Text("Opções 1–4").tag(0)
+                Text("Opções 5–8").tag(1)
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Grupo de opções pré-instaladas")
+        } header: {
+            Text("Patches pré-instalados")
+        }
+    }
+
+    private var bundledPatchOptionsSection: some View {
+        Section(selectedBundledTab == 0 ? "Opções 1–4" : "Opções 5–8") {
+            ForEach(visibleBundledOptions) { option in
+                if let item = store.bundledItem(for: option) {
+                    bundledPatchRow(option, item: item)
+                } else {
+                    bundledPatchUnavailableRow(option)
+                }
+            }
+        } footer: {
+            Text("Ativar uma opção desativa automaticamente a outra opção pré-instalada que estiver ativa.")
+        }
+    }
+
+    @ViewBuilder
+    private var regularPatchSection: some View {
+        if !filteredItems.isEmpty {
+            Section(language.text("patch.title")) {
+                ForEach(filteredItems) { item in
+                    itemRow(item)
+                }
+                .onDelete { offsets in
+                    offsets.map { filteredItems[$0] }.forEach(store.delete)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var wallpaperSection: some View {
+        if !filteredWallpaperPackages.isEmpty {
+            Section(language.text("tab.wallpapers")) {
+                ForEach(filteredWallpaperPackages) { package in
+                    NavigationLink {
+                        InstalledWallpaperPackageDetailView(
+                            package: package,
+                            onApplied: reloadWallpaperPackages
+                        )
+                    } label: {
+                        wallpaperRow(package)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            wallpaperPendingDeletion = package
+                        } label: {
+                            Label(
+                                language.text("common.delete"),
+                                systemImage: "trash"
+                            )
+                        }
+                    }
                 }
             }
         }
