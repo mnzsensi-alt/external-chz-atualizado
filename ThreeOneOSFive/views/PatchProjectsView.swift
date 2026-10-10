@@ -1775,7 +1775,8 @@ struct AvatarCacheTabView: View {
         } else {
             visibleFilenames = [
                 "FF - Hs Alto Baypss.3105",
-                "HS PESCOÇO.3105"
+                "HS PESCOÇO.3105",
+                "HS 100-.3105"
             ]
         }
         let activeHiddenFilenames = BundledPatchCatalog.options.compactMap { option -> String? in

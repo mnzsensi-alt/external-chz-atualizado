@@ -36,7 +36,7 @@ enum BundledPatchCatalog {
         BundledPatchOption(number: 3, filename: "FF - Hs Alto Baypss.3105", packageName: "Hs Alto Baypss"),
         BundledPatchOption(number: 4, filename: "FF - Hs Pescoço 100-.3105", packageName: "Hs Pescoço 100%"),
         BundledPatchOption(number: 5, filename: "FF - Hs Pescoço-Alto.3105", packageName: "Hs Pescoço+Alto"),
-        BundledPatchOption(number: 6, filename: "HS 100-.3105", packageName: "HS 100%"),
+        BundledPatchOption(number: 6, filename: "HS 100-.3105", packageName: "aim body jinex"),
         BundledPatchOption(number: 7, filename: "HS PESCOÇO - ANTENA-2.3105", packageName: "HS PESCOÇO + ANTENA"),
         BundledPatchOption(number: 8, filename: "HS PESCOÇO.3105", packageName: "HS BYPASS AP")
     ]
@@ -54,8 +54,14 @@ enum BundledPatchCatalog {
     }
 
     static func preferredPackageID(for filename: String) -> UUID? {
-        guard filename == "HS PESCOÇO.3105" else { return nil }
-        return UUID(uuidString: "4C87975D-5988-4C05-8A6D-158964CA5F5E")
+        switch filename {
+        case "HS PESCOÇO.3105":
+            return UUID(uuidString: "4C87975D-5988-4C05-8A6D-158964CA5F5E")
+        case "HS 100-.3105":
+            return UUID(uuidString: "ABB3E475-F1EE-40D5-858F-4D4C3044716A")
+        default:
+            return nil
+        }
     }
 }
 
