@@ -7,6 +7,8 @@ enum AppSection: Int, CaseIterable, Identifiable {
     case installed
     case files
     case search
+    case patchesSecond
+    case deviceInfo
 
     var id: Int { rawValue }
 }
@@ -43,7 +45,7 @@ struct FeatureVisibility: Equatable {
     }
 
     var visibleSections: [AppSection] {
-        [.installed]
+        [.installed, .patchesSecond, .deviceInfo]
     }
 
     func isVisible(_ section: AppSection) -> Bool {
@@ -61,7 +63,7 @@ struct AppTabNavigationState: Equatable {
     private(set) var filesTabs: FilesTabSession
 
     init(
-        selectedTab: Int = 0,
+        selectedTab: Int = AppSection.installed.rawValue,
         filesNavigationPath: [FileBrowserDestination] = []
     ) {
         self.selectedTab = selectedTab
@@ -87,9 +89,11 @@ struct AppTabNavigationState: Equatable {
     }
 
     mutating func reconcileSelection(with visibility: FeatureVisibility) {
-        guard AppSection(rawValue: selectedTab) == .installed,
-              visibility.isVisible(.installed) else {
-            selectedTab = AppSection.installed.rawValue
+        let visibleSections = visibility.visibleSections
+        guard let selected = AppSection(rawValue: selectedTab),
+              visibleSections.contains(selected),
+              visibility.isVisible(selected) else {
+            selectedTab = visibleSections.first?.rawValue ?? AppSection.installed.rawValue
             return
         }
     }

@@ -1383,3 +1383,356 @@ private struct PatchActivityView: UIViewControllerRepresentable {
         context: Context
     ) {}
 }
+
+
+struct BundledPatchesTabView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var store: PatchProjectStore
+    @State private var pendingAction: PendingBundledPatchAction?
+
+    let groupIndex: Int
+
+    private var filenames: [String] {
+        if groupIndex == 0 {
+            return [
+                "FF - Hs Pescoço 100-.3105",
+                "FF - Hs Alto 100-.3105",
+                "HS PESCOÇO - ANTENA-2.3105",
+                "FF - Hs Pescoço-Alto.3105"
+            ]
+        }
+        return [
+            "420 i.3105",
+            "FF - Hs Alto Baypss.3105",
+            "HS 100-.3105",
+            "HS PESCOÇO.3105"
+        ]
+    }
+
+    private var options: [BundledPatchOption] {
+        filenames.compactMap { BundledPatchCatalog.option(for: $0) }
+    }
+
+    private var groupTitle: String {
+        groupIndex == 0 ? "Patches 1–4" : "Patches 5–8"
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    groupHeader
+                    ForEach(options.indices, id: \.self) { index in
+                        patchCard(
+                            options[index],
+                            displayNumber: groupIndex * 4 + index + 1
+                        )
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 18)
+                .padding(.bottom, 28)
+            }
+            .background(AppTheme.pageBackground.ignoresSafeArea())
+            .navigationTitle(groupTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .confirmationDialog(
+                pendingAction?.activate == true ? "Ativar patch?" : "Desativar patch?",
+                isPresented: Binding(
+                    get: { pendingAction != nil },
+                    set: { if !$0 { pendingAction = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let action = pendingAction {
+                    Button(action.activate ? "Ativar" : "Desativar") {
+                        store.setBundledPatch(action.itemID, active: action.activate)
+                        pendingAction = nil
+                    }
+                    Button("Cancelar", role: .cancel) {
+                        pendingAction = nil
+                    }
+                }
+            } message: {
+                if let action = pendingAction {
+                    Text(action.activate
+                        ? "Ativar \(action.option.filename). Outra opção pré-instalada ativa será desativada primeiro."
+                        : "Desativar \(action.option.filename) e restaurar o arquivo original.")
+                }
+            }
+        }
+        .tint(AppTheme.accent)
+    }
+
+    private var groupHeader: some View {
+        HStack(spacing: 13) {
+            Image(systemName: "square.grid.2x2.fill")
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 46, height: 46)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
+                }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(groupTitle.uppercased())
+                    .font(.caption.weight(.bold))
+                    .tracking(1.1)
+                    .foregroundStyle(.secondary)
+                Text("Escolha um patch")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.bottom, 2)
+    }
+
+    private func patchCard(
+        _ option: BundledPatchOption,
+        displayNumber: Int
+    ) -> some View {
+        let item = store.bundledItem(for: option)
+        let active = item.map { store.isApplied($0.id) } ?? false
+        let status = item == nil
+            ? (store.isBusy ? "CARREGANDO" : "INDISPONÍVEL")
+            : (active ? "ATIVO" : "DESATIVADO")
+
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                Text(String(format: "%02d", displayNumber))
+                    .font(.caption.monospacedDigit().weight(.bold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 42, height: 42)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay {
+                        Circle().strokeBorder(Color.primary.opacity(0.14), lineWidth: 1)
+                    }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("OPÇÃO \(displayNumber)")
+                        .font(.caption2.weight(.bold))
+                        .tracking(1)
+                        .foregroundStyle(.secondary)
+                    Text(option.filename)
+                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(2)
+                    Text(status)
+                        .font(.caption2.weight(.bold))
+                        .tracking(0.7)
+                        .foregroundStyle(active ? .primary : .secondary)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(Color.primary.opacity(0.055), in: Capsule())
+                        .overlay {
+                            Capsule().strokeBorder(Color.primary.opacity(0.09), lineWidth: 0.7)
+                        }
+                }
+                Spacer(minLength: 0)
+            }
+
+            if let item {
+                glassButton(
+                    title: active ? "Desativar" : "Ativar",
+                    symbol: active ? "arrow.uturn.backward" : "checkmark",
+                    emphasized: active
+                ) {
+                    pendingAction = PendingBundledPatchAction(
+                        option: option,
+                        itemID: item.id,
+                        activate: !active
+                    )
+                }
+                .disabled(store.isBusy || item.project == nil)
+            } else if store.isBusy {
+                HStack(spacing: 9) {
+                    ProgressView()
+                    Text("Carregando patch…")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 44)
+            } else {
+                glassButton(
+                    title: "Tentar carregar",
+                    symbol: "arrow.clockwise",
+                    emphasized: false
+                ) {
+                    store.retryBundledPatches()
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 23, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 23, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            Color.primary.opacity(0.18),
+                            Color.primary.opacity(0.035),
+                            Color.primary.opacity(0.12)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        }
+        .shadow(
+            color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.055),
+            radius: 14,
+            x: 0,
+            y: 7
+        )
+    }
+
+    private func glassButton(
+        title: String,
+        symbol: String,
+        emphasized: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(emphasized ? Color(uiColor: .systemBackground) : Color.primary)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background {
+                    Capsule()
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            Capsule().fill(Color.primary.opacity(emphasized ? 0.84 : 0.045))
+                        }
+                }
+                .overlay {
+                    Capsule().strokeBorder(Color.primary.opacity(0.17), lineWidth: 0.8)
+                }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct DeviceInfoTabView: View {
+    private var compatible: Bool {
+        let version = AppInfo.versionTuple
+        return ExploitSupportPolicy.isSupported(
+            major: version.major,
+            minor: version.minor,
+            patch: version.patch,
+            build: AppInfo.osBuild
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 13) {
+                        Image(systemName: "iphone")
+                            .font(.system(size: 23, weight: .medium))
+                            .foregroundStyle(.primary)
+                            .frame(width: 50, height: 50)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 17, style: .continuous)
+                                    .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
+                            }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("SEU DISPOSITIVO")
+                                .font(.caption.weight(.bold))
+                                .tracking(1.1)
+                                .foregroundStyle(.secondary)
+                            Text("Informações do sistema")
+                                .font(.headline.weight(.semibold))
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                    .padding(.bottom, 2)
+
+                    DeviceInfoGlassCard(
+                        symbol: "iphone",
+                        title: "MODELO DO DISPOSITIVO",
+                        value: UIDevice.current.model,
+                        detail: AppInfo.displayMachineName
+                    )
+                    DeviceInfoGlassCard(
+                        symbol: "gearshape",
+                        title: "VERSÃO DO iOS",
+                        value: "iOS \(AppInfo.osVersion)",
+                        detail: "Build \(AppInfo.osBuild)"
+                    )
+                    DeviceInfoGlassCard(
+                        symbol: compatible ? "checkmark.shield" : "info.circle",
+                        title: "COMPATIBILIDADE DO 3105",
+                        value: compatible ? "Dentro da faixa suportada" : "Fora da faixa verificada",
+                        detail: compatible
+                            ? "Esta versão do iOS está na faixa verificada para o exploit do 3105."
+                            : "Esta versão do iOS não está na faixa verificada no código do 3105."
+                    )
+                    Text("A aplicação dos patches também depende do app-alvo e do acesso aos arquivos dele neste dispositivo.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 4)
+                        .padding(.top, 2)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 18)
+                .padding(.bottom, 28)
+            }
+            .background(AppTheme.pageBackground.ignoresSafeArea())
+            .navigationTitle("Dispositivo")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .tint(AppTheme.accent)
+    }
+}
+
+private struct DeviceInfoGlassCard: View {
+    let symbol: String
+    let title: String
+    let value: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 13) {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 38, height: 38)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.8)
+                }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.caption2.weight(.bold))
+                    .tracking(0.9)
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(15)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 21, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 21, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.9)
+        }
+        .shadow(color: Color.black.opacity(0.045), radius: 12, x: 0, y: 5)
+    }
+}

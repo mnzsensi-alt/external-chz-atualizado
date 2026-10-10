@@ -75,7 +75,7 @@ struct ContentView: View {
                 sectionContent(section)
                     .tabItem {
                         CompactTabLabel(
-                            title: language.text(section.titleKey),
+                            title: section.displayTitle(language: language),
                             systemImage: section.systemImage
                         )
                     }
@@ -93,7 +93,7 @@ struct ContentView: View {
                             tabNavigation.select(section.rawValue)
                         }
                     } label: {
-                        Label(language.text(section.titleKey), systemImage: section.systemImage)
+                        Label(section.displayTitle(language: language), systemImage: section.systemImage)
                             .fontWeight(section.rawValue == tabNavigation.selectedTab ? .semibold : .regular)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
@@ -137,10 +137,11 @@ struct ContentView: View {
                 onOpenLogs: openLogs
             )
         case .installed:
-            PatchProjectsView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
+            BundledPatchesTabView(groupIndex: 0)
+        case .patchesSecond:
+            BundledPatchesTabView(groupIndex: 1)
+        case .deviceInfo:
+            DeviceInfoTabView()
         case .files:
             AppDataBrowserView(
                 tabSession: filesTabSession,
@@ -184,7 +185,11 @@ struct ContentView: View {
     }
 
     private var selectedVisibleSection: AppSection {
-        .installed
+        guard let selection = AppSection(rawValue: tabNavigation.selectedTab),
+              featureVisibility.visibleSections.contains(selection) else {
+            return .installed
+        }
+        return selection
     }
 
     private func openSettings() {
@@ -224,6 +229,17 @@ private extension AppSection {
         case .installed: return "tab.installed"
         case .files: return "tab.files"
         case .search: return "tab.search"
+        case .patchesSecond: return "tab.installed"
+        case .deviceInfo: return "common.device"
+        }
+    }
+
+    func displayTitle(language: AppLanguage) -> String {
+        switch self {
+        case .installed: return "Patches 1–4"
+        case .patchesSecond: return "Patches 5–8"
+        case .deviceInfo: return "Dispositivo"
+        default: return language.text(titleKey)
         }
     }
 
@@ -235,6 +251,8 @@ private extension AppSection {
         case .installed: return "tray.full.fill"
         case .files: return "folder.fill"
         case .search: return "magnifyingglass"
+        case .patchesSecond: return "square.grid.2x2.fill"
+        case .deviceInfo: return "iphone"
         }
     }
 }
