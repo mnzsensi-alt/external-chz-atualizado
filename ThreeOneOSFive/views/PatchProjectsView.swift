@@ -2011,9 +2011,9 @@ private struct MonochromeGlassBackdrop: View {
         ZStack {
             LinearGradient(
                 gradient: Gradient(stops: [
-                    .init(color: .black, location: 0),
-                    .init(color: .black, location: 0.61),
-                    .init(color: Color(white: 0.085), location: 1)
+                    .init(color: Color(white: 0.045), location: 0),
+                    .init(color: Color(white: 0.045), location: 0.61),
+                    .init(color: Color(white: 0.10), location: 1)
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
