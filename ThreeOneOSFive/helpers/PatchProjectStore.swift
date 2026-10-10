@@ -23,22 +23,22 @@ struct PatchStoreAlert: Identifiable {
 struct BundledPatchOption: Identifiable, Equatable {
     let number: Int
     let filename: String
+    let packageName: String
 
     var id: String { filename }
-    var projectName: String { (filename as NSString).deletingPathExtension }
     var tabIndex: Int { number <= 4 ? 0 : 1 }
 }
 
 enum BundledPatchCatalog {
     static let options: [BundledPatchOption] = [
-        BundledPatchOption(number: 1, filename: "420 i.3105"),
-        BundledPatchOption(number: 2, filename: "FF - Hs Alto 100-.3105"),
-        BundledPatchOption(number: 3, filename: "FF - Hs Alto Baypss.3105"),
-        BundledPatchOption(number: 4, filename: "FF - Hs Pescoço 100-.3105"),
-        BundledPatchOption(number: 5, filename: "FF - Hs Pescoço-Alto.3105"),
-        BundledPatchOption(number: 6, filename: "HS 100-.3105"),
-        BundledPatchOption(number: 7, filename: "HS PESCOÇO - ANTENA-2.3105"),
-        BundledPatchOption(number: 8, filename: "HS PESCOÇO.3105")
+        BundledPatchOption(number: 1, filename: "420 i.3105", packageName: "420 i"),
+        BundledPatchOption(number: 2, filename: "FF - Hs Alto 100-.3105", packageName: "Hs Alto 100%"),
+        BundledPatchOption(number: 3, filename: "FF - Hs Alto Baypss.3105", packageName: "Hs Alto Baypss"),
+        BundledPatchOption(number: 4, filename: "FF - Hs Pescoço 100-.3105", packageName: "Hs Pescoço 100%"),
+        BundledPatchOption(number: 5, filename: "FF - Hs Pescoço-Alto.3105", packageName: "Hs Pescoço+Alto"),
+        BundledPatchOption(number: 6, filename: "HS 100-.3105", packageName: "HS 100%"),
+        BundledPatchOption(number: 7, filename: "HS PESCOÇO - ANTENA-2.3105", packageName: "HS PESCOÇO + ANTENA"),
+        BundledPatchOption(number: 8, filename: "HS PESCOÇO.3105", packageName: "HS PESCOÇO")
     ]
 
     static func sourceKey(for packageID: UUID) -> String {
@@ -47,6 +47,10 @@ enum BundledPatchCatalog {
 
     static func option(for filename: String) -> BundledPatchOption? {
         options.first { $0.filename == filename }
+    }
+
+    static func option(packageName: String) -> BundledPatchOption? {
+        options.first { $0.packageName == packageName }
     }
 }
 
@@ -68,10 +72,7 @@ private enum BundledPatchBootstrap {
             )
         } ?? []
         let sources = Array(Set(bundledURLs + directoryURLs))
-            .filter {
-                $0.pathExtension.lowercased() == "3105"
-                    && BundledPatchCatalog.option(for: $0.lastPathComponent) != nil
-            }
+            .filter { $0.pathExtension.lowercased() == "3105" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
         guard !sources.isEmpty else { return }
 
@@ -80,20 +81,17 @@ private enum BundledPatchBootstrap {
             do {
                 let data = try PatchProjectLibrary.readPackage(at: sourceURL)
                 let summary = try PatchPackageCodec.inspect(data)
-                let sourceKey = BundledPatchCatalog.sourceKey(for: summary.packageID)
-                guard let option = BundledPatchCatalog.option(for: sourceURL.lastPathComponent) else {
-                    continue
-                }
-                if existingIDs.contains(summary.packageID) {
-                    UserDefaults.standard.set(sourceURL.lastPathComponent, forKey: sourceKey)
-                    continue
-                }
                 guard !summary.isPasswordProtected else {
                     throw PatchPackageError.invalidProject
                 }
                 let decoded = try PatchPackageCodec.decode(data, password: nil)
-                guard decoded.project.name == option.projectName else {
-                    throw PatchPackageError.invalidProject
+                guard let option = BundledPatchCatalog.option(
+                    packageName: decoded.project.name
+                ) else { continue }
+                let sourceKey = BundledPatchCatalog.sourceKey(for: summary.packageID)
+                if existingIDs.contains(summary.packageID) {
+                    UserDefaults.standard.set(option.filename, forKey: sourceKey)
+                    continue
                 }
                 // Keep all eight packs available in the library, including packs whose
                 // destinations overlap. The transaction layer blocks overlapping applies.
@@ -102,7 +100,7 @@ private enum BundledPatchBootstrap {
                     projectName: decoded.project.name
                 )
                 existingIDs.insert(summary.packageID)
-                UserDefaults.standard.set(sourceURL.lastPathComponent, forKey: sourceKey)
+                UserDefaults.standard.set(option.filename, forKey: sourceKey)
             } catch {
                 log("patch: skipped bundled package \(sourceURL.lastPathComponent)")
             }

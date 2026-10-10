@@ -28,7 +28,8 @@ fi
 
 mkdir -p "$PACKAGE_DIR/Payload"
 cp -R "$APP_PATH" "$PACKAGE_DIR/Payload/"
-(cd "$PACKAGE_DIR" && /usr/bin/zip -qry "$OUTPUT" Payload)
+(cd "$PACKAGE_DIR" && /usr/bin/ditto -c -k --sequesterRsrc --keepParent Payload "$OUTPUT")
 
+/usr/bin/unzip -t "$OUTPUT"
 /usr/bin/unzip -l "$OUTPUT" | sed -n '1,80p'
 printf '\nCreated: %s\n' "$OUTPUT"
