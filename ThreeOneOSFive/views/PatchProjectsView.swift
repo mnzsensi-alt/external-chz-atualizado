@@ -1745,6 +1745,12 @@ struct AvatarCacheTabView: View {
     @State private var pendingStates: [UUID: Bool] = [:]
 
     let groupIndex: Int
+    let showsBackdrop: Bool
+
+    init(groupIndex: Int, showsBackdrop: Bool = true) {
+        self.groupIndex = groupIndex
+        self.showsBackdrop = showsBackdrop
+    }
 
     private var filenames: [String] {
         let visibleFilenames: [String]
@@ -1781,7 +1787,11 @@ struct AvatarCacheTabView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                MonochromeGlassBackdrop()
+                if showsBackdrop {
+                    MonochromeGlassBackdrop()
+                } else {
+                    Color.clear
+                }
                 VStack(spacing: 13) {
                     ForEach(options) { option in
                         patchRow(option)
@@ -2003,7 +2013,7 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
     }
 }
 
-private struct MonochromeGlassBackdrop: View {
+struct MonochromeGlassBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -2029,10 +2039,12 @@ struct LiquidGlassDeviceInfoTabView: View {
     // Login/validação ainda não existe; estes valores serão fornecidos pelo fluxo de ativação futuro.
     let activationKey: String?
     let keyExpiresAt: Date?
+    let showsBackdrop: Bool
 
-    init(activationKey: String? = nil, keyExpiresAt: Date? = nil) {
+    init(activationKey: String? = nil, keyExpiresAt: Date? = nil, showsBackdrop: Bool = true) {
         self.activationKey = activationKey
         self.keyExpiresAt = keyExpiresAt
+        self.showsBackdrop = showsBackdrop
     }
 
     private enum CompatibilityStatus {
@@ -2077,7 +2089,11 @@ struct LiquidGlassDeviceInfoTabView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                MonochromeGlassBackdrop()
+                if showsBackdrop {
+                    MonochromeGlassBackdrop()
+                } else {
+                    Color.clear
+                }
                 VStack(spacing: 14) {
                     keyStatusCard
                     deviceSummaryCard

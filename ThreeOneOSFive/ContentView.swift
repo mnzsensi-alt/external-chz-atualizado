@@ -90,11 +90,15 @@ struct ContentView: View {
                             .tag(section.rawValue)
                     }
                 }
+                .toolbarBackground(.hidden, for: .tabBar)
 
                 ZStack {
-                    sectionContent(selectedVisibleSection)
-                        .id(selectedVisibleSection.rawValue)
-                        .transition(slideBlurTransition(width: geometry.size.width))
+                    MonochromeGlassBackdrop()
+                    ZStack {
+                        sectionContent(selectedVisibleSection, showsBackdrop: false)
+                            .id(selectedVisibleSection.rawValue)
+                            .transition(slideBlurTransition(width: geometry.size.width))
+                    }
                 }
                 .frame(
                     width: geometry.size.width,
@@ -152,7 +156,7 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func sectionContent(_ section: AppSection) -> some View {
+    private func sectionContent(_ section: AppSection, showsBackdrop: Bool = true) -> some View {
         switch section {
         case .home:
             RepositoryHomeView(
@@ -170,11 +174,11 @@ struct ContentView: View {
                 onOpenLogs: openLogs
             )
         case .installed:
-            AvatarCacheTabView(groupIndex: 0)
+            AvatarCacheTabView(groupIndex: 0, showsBackdrop: showsBackdrop)
         case .patchesSecond:
-            AvatarCacheTabView(groupIndex: 1)
+            AvatarCacheTabView(groupIndex: 1, showsBackdrop: showsBackdrop)
         case .deviceInfo:
-            LiquidGlassDeviceInfoTabView()
+            LiquidGlassDeviceInfoTabView(showsBackdrop: showsBackdrop)
         case .files:
             AppDataBrowserView(
                 tabSession: filesTabSession,
