@@ -1766,7 +1766,7 @@ struct AvatarCacheTabView: View {
     }
 
     private var tabTitle: String {
-        groupIndex == 0 ? "Avatar" : "Cache"
+        groupIndex == 0 ? "AVATAR" : "CACHE"
     }
 
     var body: some View {
@@ -1806,9 +1806,11 @@ struct AvatarCacheTabView: View {
 
         return HStack(spacing: 13) {
             Text(name)
-                .font(.system(size: 18, weight: .black, design: .rounded))
+                .font(.system(size: 15, weight: .black, design: .rounded))
+                .tracking(0.35)
                 .foregroundStyle(.white)
-                .lineLimit(2)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 6)
             Toggle(isOn: Binding(
@@ -1879,14 +1881,14 @@ struct AvatarCacheTabView: View {
 
     private func displayName(for option: BundledPatchOption) -> String {
         switch option.filename {
-        case "420 i.3105": return "420 i"
-        case "FF - Hs Alto 100-.3105": return "Alto 100%"
-        case "FF - Hs Alto Baypss.3105": return "Alto Bypass"
-        case "FF - Hs Pescoço 100-.3105": return "Pescoço 100%"
-        case "FF - Hs Pescoço-Alto.3105": return "Pescoço + Alto"
-        case "HS 100-.3105": return "HS 100%"
-        case "HS PESCOÇO - ANTENA-2.3105": return "Pescoço + Antena"
-        case "HS PESCOÇO.3105": return "Pescoço"
+        case "420 i.3105": return "HS・PEITO/PESCOÇO"
+        case "FF - Hs Alto 100-.3105": return "HS・ALTO"
+        case "FF - Hs Alto Baypss.3105": return "HS・ALTO/PESCOÇO"
+        case "FF - Hs Pescoço 100-.3105": return "HS・PESCOÇO"
+        case "FF - Hs Pescoço-Alto.3105": return "HS・ALTO/PESCOÇO"
+        case "HS 100-.3105": return "HS・PEITO"
+        case "HS PESCOÇO - ANTENA-2.3105": return "HS・PESCOÇO + ANTENA"
+        case "HS PESCOÇO.3105": return "HS・PESCOÇO"
         default: return option.packageName
         }
     }
@@ -2030,7 +2032,7 @@ struct LiquidGlassDeviceInfoTabView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Dispositivo")
+                    Text("DISPOSITIVO")
                         .font(.system(size: 22, weight: .black, design: .rounded))
                         .foregroundStyle(.white)
                 }

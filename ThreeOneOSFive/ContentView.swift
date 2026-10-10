@@ -77,7 +77,8 @@ struct ContentView: View {
                     .tabItem {
                         CompactTabLabel(
                             title: section.displayTitle(language: language),
-                            systemImage: section.systemImage
+                            systemImage: section.systemImage,
+                            isReticle: section == .installed
                         )
                     }
                     .tag(section.rawValue)
@@ -94,7 +95,15 @@ struct ContentView: View {
                             tabNavigation.select(section.rawValue)
                         }
                     } label: {
-                        Label(section.displayTitle(language: language), systemImage: section.systemImage)
+                        Label {
+                            Text(section.displayTitle(language: language))
+                        } icon: {
+                            if section == .installed {
+                                ReticleTabIcon()
+                            } else {
+                                Image(systemName: section.systemImage)
+                            }
+                        }
                             .fontWeight(section.rawValue == tabNavigation.selectedTab ? .semibold : .regular)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
@@ -205,10 +214,13 @@ struct ContentView: View {
 private struct CompactTabLabel: View {
     let title: String
     let systemImage: String
+    let isReticle: Bool
 
     @ViewBuilder
     var body: some View {
-        if let image = UIImage(
+        if isReticle {
+            ReticleTabIcon()
+        } else if let image = UIImage(
             systemName: systemImage,
             withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
         )?.withRenderingMode(.alwaysTemplate) {
@@ -219,6 +231,37 @@ private struct CompactTabLabel: View {
         }
         Text(title)
             .font(.system(size: 10, weight: .black, design: .rounded))
+    }
+}
+
+private struct ReticleTabIcon: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(Color.white, lineWidth: 1.7)
+                .frame(width: 14, height: 14)
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color.white)
+                .frame(width: 2, height: 5)
+                .offset(y: -10)
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color.white)
+                .frame(width: 2, height: 5)
+                .offset(y: 10)
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color.white)
+                .frame(width: 5, height: 2)
+                .offset(x: -10)
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color.white)
+                .frame(width: 5, height: 2)
+                .offset(x: 10)
+            Circle()
+                .fill(Color.white)
+                .frame(width: 3.5, height: 3.5)
+        }
+        .frame(width: 24, height: 24)
+        .accessibilityHidden(true)
     }
 }
 
@@ -238,9 +281,9 @@ private extension AppSection {
 
     func displayTitle(language: AppLanguage) -> String {
         switch self {
-        case .installed: return "Avatar"
-        case .patchesSecond: return "Cache"
-        case .deviceInfo: return "Dispositivo"
+        case .installed: return "AVATAR"
+        case .patchesSecond: return "CACHE"
+        case .deviceInfo: return "DISPOSITIVO"
         default: return language.text(titleKey)
         }
     }
