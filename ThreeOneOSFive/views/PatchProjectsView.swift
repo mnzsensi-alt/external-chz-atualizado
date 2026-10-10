@@ -1994,31 +1994,117 @@ private struct LiquidGlassToggleStyle: ToggleStyle {
 }
 
 private struct MonochromeGlassBackdrop: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private struct BubbleSpec {
+        let x: CGFloat
+        let radius: CGFloat
+        let speed: Double
+        let phase: Double
+        let sway: CGFloat
+        let opacity: Double
+    }
+
+    private static let bubbles: [BubbleSpec] = [
+        BubbleSpec(x: 0.08, radius: 13, speed: 0.026, phase: 0.04, sway: 0.025, opacity: 0.13),
+        BubbleSpec(x: 0.22, radius: 26, speed: 0.018, phase: 0.42, sway: 0.018, opacity: 0.095),
+        BubbleSpec(x: 0.38, radius: 10, speed: 0.031, phase: 0.78, sway: 0.03, opacity: 0.15),
+        BubbleSpec(x: 0.55, radius: 19, speed: 0.022, phase: 0.21, sway: 0.022, opacity: 0.11),
+        BubbleSpec(x: 0.73, radius: 31, speed: 0.016, phase: 0.61, sway: 0.016, opacity: 0.085),
+        BubbleSpec(x: 0.91, radius: 15, speed: 0.028, phase: 0.87, sway: 0.026, opacity: 0.13),
+        BubbleSpec(x: 0.14, radius: 36, speed: 0.014, phase: 0.56, sway: 0.012, opacity: 0.07),
+        BubbleSpec(x: 0.31, radius: 16, speed: 0.024, phase: 0.92, sway: 0.02, opacity: 0.12),
+        BubbleSpec(x: 0.49, radius: 28, speed: 0.017, phase: 0.34, sway: 0.018, opacity: 0.09),
+        BubbleSpec(x: 0.66, radius: 11, speed: 0.03, phase: 0.69, sway: 0.028, opacity: 0.15),
+        BubbleSpec(x: 0.83, radius: 22, speed: 0.02, phase: 0.13, sway: 0.02, opacity: 0.105),
+        BubbleSpec(x: 0.04, radius: 20, speed: 0.021, phase: 0.49, sway: 0.022, opacity: 0.1)
+    ]
+
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(white: 0.075), Color.black, Color(white: 0.045)],
+                colors: [Color(white: 0.055), Color.black, Color(white: 0.035)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             Circle()
-                .fill(Color.white.opacity(0.055))
+                .fill(Color.white.opacity(0.04))
                 .frame(width: 310, height: 310)
                 .blur(radius: 95)
                 .offset(x: 150, y: -265)
             Circle()
-                .fill(Color.gray.opacity(0.105))
+                .fill(Color.gray.opacity(0.075))
                 .frame(width: 270, height: 270)
                 .blur(radius: 100)
                 .offset(x: -165, y: 270)
             Circle()
-                .fill(Color.white.opacity(0.025))
+                .fill(Color.white.opacity(0.02))
                 .frame(width: 190, height: 190)
                 .blur(radius: 75)
                 .offset(x: 145, y: 390)
+            TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+                Canvas { context, size in
+                    guard size.width > 0, size.height > 0 else { return }
+                    let elapsed = timeline.date.timeIntervalSinceReferenceDate
+
+                    for bubble in Self.bubbles {
+                        let progress = (elapsed * bubble.speed + bubble.phase)
+                            .truncatingRemainder(dividingBy: 1)
+                        let travel = size.height + bubble.radius * 2
+                        let y = size.height + bubble.radius - CGFloat(progress) * travel
+                        let drift = CGFloat(sin(elapsed * 0.28 + bubble.phase * 2 * Double.pi))
+                            * size.width * bubble.sway
+                        let x = size.width * bubble.x + drift
+                        let rect = CGRect(
+                            x: x - bubble.radius,
+                            y: y - bubble.radius,
+                            width: bubble.radius * 2,
+                            height: bubble.radius * 2
+                        )
+                        let circle = Path(ellipseIn: rect)
+                        let highlightCenter = CGPoint(
+                            x: rect.midX - bubble.radius * 0.28,
+                            y: rect.midY - bubble.radius * 0.3
+                        )
+                        let glass = Gradient(colors: [
+                            Color.white.opacity(bubble.opacity * 0.72),
+                            Color.gray.opacity(bubble.opacity * 0.22),
+                            Color.black.opacity(0.035)
+                        ])
+
+                        context.fill(
+                            circle,
+                            with: .radialGradient(
+                                glass,
+                                center: highlightCenter,
+                                startRadius: 0,
+                                endRadius: bubble.radius * 1.45
+                            )
+                        )
+                        context.stroke(
+                            circle,
+                            with: .color(Color.white.opacity(bubble.opacity)),
+                            lineWidth: 0.8
+                        )
+
+                        let glint = CGRect(
+                            x: rect.minX + bubble.radius * 0.42,
+                            y: rect.minY + bubble.radius * 0.38,
+                            width: bubble.radius * 0.38,
+                            height: bubble.radius * 0.2
+                        )
+                        context.fill(
+                            Path(ellipseIn: glint),
+                            with: .color(Color.white.opacity(bubble.opacity * 0.72))
+                        )
+                    }
+                }
+            }
+            .blendMode(.screen)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
