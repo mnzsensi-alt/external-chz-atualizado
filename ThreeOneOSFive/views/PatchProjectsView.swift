@@ -2078,24 +2078,17 @@ struct LiquidGlassDeviceInfoTabView: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
 
-    // Login/validação ainda não existe; estes valores serão fornecidos pelo fluxo de ativação futuro.
-    let activationKey: String?
-    let keyExpiresAt: Date?
     let transitionProgress: CGFloat
     let slideDirection: CGFloat
     let transitionWidth: CGFloat
     let isSelected: Bool
 
     init(
-        activationKey: String? = nil,
-        keyExpiresAt: Date? = nil,
         transitionProgress: CGFloat = 1,
         slideDirection: CGFloat = 1,
         transitionWidth: CGFloat = 0,
         isSelected: Bool = true
     ) {
-        self.activationKey = activationKey
-        self.keyExpiresAt = keyExpiresAt
         self.transitionProgress = transitionProgress
         self.slideDirection = slideDirection
         self.transitionWidth = transitionWidth
@@ -2134,19 +2127,11 @@ struct LiquidGlassDeviceInfoTabView: View {
         }
     }
 
-    private var maskedKey: String {
-        guard let activationKey else { return "AGUARDANDO LOGIN" }
-        let visiblePrefix = String(activationKey.prefix(5))
-        let hiddenLength = max(0, activationKey.count - visiblePrefix.count)
-        return visiblePrefix + String(repeating: "•", count: hiddenLength)
-    }
-
     var body: some View {
         NavigationStack {
             ZStack {
                 MonochromeGlassBackdrop()
                 VStack(spacing: 14) {
-                    keyStatusCard
                     deviceSummaryCard
                     Spacer(minLength: 0)
                 }
@@ -2199,88 +2184,6 @@ struct LiquidGlassDeviceInfoTabView: View {
             }
         }
         .tint(AppTheme.accent)
-    }
-
-    private var keyStatusCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("LICENÇA")
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .tracking(0.9)
-                .foregroundStyle(.primary)
-
-            licenseInfoRow(title: "KEY", symbol: "key.fill", value: maskedKey)
-            Divider()
-            licenseInfoRow(
-                title: "VALIDADE",
-                symbol: "calendar",
-                value: keyExpiresAt.map {
-                    DateFormatter.localizedString(from: $0, dateStyle: .medium, timeStyle: .none)
-                } ?? "Aguardando login"
-            )
-            Divider()
-            HStack(spacing: 10) {
-                Image(systemName: "clock")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 18)
-                    .foregroundStyle(.primary)
-                Text("TEMPO RESTANTE")
-                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 4)
-                Group {
-                    if let keyExpiresAt {
-                        TimelineView(.periodic(from: Date(), by: 1)) { context in
-                            Text(countdownText(until: keyExpiresAt, now: context.date))
-                        }
-                    } else {
-                        Text("--D --:--:--")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            }
-            .accessibilityLabel(keyExpiresAt == nil ? "Tempo restante aguardando login" : "Tempo restante")
-
-            HStack {
-                Spacer(minLength: 0)
-                Button(action: copyActivationKey) {
-                    Label("COPIAR", systemImage: "doc.on.doc")
-                        .font(.system(size: 10, weight: .black, design: .rounded))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 9)
-                        .background(.ultraThinMaterial, in: Capsule())
-                }
-                .disabled(activationKey == nil)
-                .opacity(activationKey == nil ? 0.45 : 1)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(profileCardSurface())
-    }
-
-    private func licenseInfoRow(title: String, symbol: String, value: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
-                .frame(width: 18)
-                .foregroundStyle(.primary)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.system(size: 9, weight: .heavy, design: .rounded))
-                    .tracking(0.7)
-                    .foregroundStyle(.secondary)
-                Text(value)
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            Spacer(minLength: 0)
-        }
     }
 
     private var deviceSummaryCard: some View {
@@ -2346,18 +2249,5 @@ struct LiquidGlassDeviceInfoTabView: View {
             .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.40 : 0.08), radius: 22, x: 0, y: 12)
     }
 
-    private func countdownText(until expiration: Date, now: Date) -> String {
-        let remaining = max(0, Int(expiration.timeIntervalSince(now)))
-        guard remaining > 0 else { return "EXPIRADA" }
-        let days = remaining / 86_400
-        let hours = (remaining % 86_400) / 3_600
-        let minutes = (remaining % 3_600) / 60
-        let seconds = remaining % 60
-        return String(format: "%02dD  %02d:%02d:%02d", days, hours, minutes, seconds)
-    }
 
-    private func copyActivationKey() {
-        guard let activationKey else { return }
-        UIPasteboard.general.string = activationKey
-    }
 }
