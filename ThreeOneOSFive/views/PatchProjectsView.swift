@@ -1776,11 +1776,11 @@ struct AvatarCacheTabView: View {
             visibleFilenames = [
                 "FF - Hs Alto Baypss.3105",
                 "HS PESCOÇO.3105",
-                "HS 100-.3105"
+                "420 i.3105"
             ]
         }
         let activeHiddenFilenames = BundledPatchCatalog.options.compactMap { option -> String? in
-            guard option.tabIndex == groupIndex,
+            guard option.avatarCacheTabIndex == groupIndex,
                   !visibleFilenames.contains(option.filename),
                   let item = store.bundledItem(for: option),
                   store.isApplied(item.id) else { return nil }
@@ -1950,12 +1950,12 @@ struct AvatarCacheTabView: View {
 
     private func displayName(for option: BundledPatchOption) -> String {
         switch option.filename {
-        case "420 i.3105": return "HS・PEITO/PESCOÇO"
+        case "420 i.3105": return "HS・PEITO"
         case "FF - Hs Alto 100-.3105": return "HS・ALTO"
         case "FF - Hs Alto Baypss.3105": return "HS・ALTO/PESCOÇO"
         case "FF - Hs Pescoço 100-.3105": return "HS・PESCOÇO"
         case "FF - Hs Pescoço-Alto.3105": return "HS・ALTO/PESCOÇO"
-        case "HS 100-.3105": return "HS・PEITO"
+        case "HS 100-.3105": return "HS・CORPO"
         case "HS PESCOÇO - ANTENA-2.3105": return "HS・PESCOÇO + ANTENA"
         case "HS PESCOÇO.3105": return "HS・PESCOÇO"
         default: return option.packageName

@@ -27,6 +27,7 @@ struct BundledPatchOption: Identifiable, Equatable {
 
     var id: String { filename }
     var tabIndex: Int { number <= 4 ? 0 : 1 }
+    var avatarCacheTabIndex: Int { filename == "420 i.3105" ? 1 : tabIndex }
 }
 
 enum BundledPatchCatalog {
