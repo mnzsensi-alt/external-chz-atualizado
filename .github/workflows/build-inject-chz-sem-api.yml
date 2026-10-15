@@ -1,0 +1,22 @@
+name: Build inject-chz sem API IPA
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'inject-chz-sem-api/**'
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-26-intel
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar variante sem API
+        run: bash inject-chz-sem-api/compilar-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inject-chz-sem-api
+          path: inject-chz-sem-api/dist/inject-chz-sem-api.ipa
+          if-no-files-found: error
