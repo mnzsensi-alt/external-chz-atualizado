@@ -161,7 +161,7 @@ struct ContentView: View {
     ) -> some View {
         switch section {
         case .home:
-            ObjectiveCDashboardHost(aimbotMode: false)
+            LiveDashboardView()
         case .new:
             RepositoryNewView(
                 onOpenSettings: openSettings,
@@ -181,7 +181,7 @@ struct ContentView: View {
                 isSelected: isSelected
             )
         case .patchesSecond:
-            ObjectiveCDashboardHost(aimbotMode: true)
+            AimbotPreviewView()
         case .deviceInfo:
             LiquidGlassDeviceInfoTabView(
                 transitionProgress: transitionProgress,
@@ -270,19 +270,6 @@ struct ContentView: View {
     private func openLogs() {
         showLogs = true
     }
-}
-
-private struct ObjectiveCDashboardHost: UIViewControllerRepresentable {
-    let aimbotMode: Bool
-
-    func makeUIViewController(context: Context) -> PreviewDashboardViewController {
-        PreviewDashboardViewController(aimbotMode: aimbotMode)
-    }
-
-    func updateUIViewController(
-        _ uiViewController: PreviewDashboardViewController,
-        context: Context
-    ) {}
 }
 
 private enum TabSlideDirection {
