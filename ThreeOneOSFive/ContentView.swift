@@ -181,13 +181,7 @@ struct ContentView: View {
                 isSelected: isSelected
             )
         case .patchesSecond:
-            AvatarCacheTabView(
-                groupIndex: 1,
-                transitionProgress: transitionProgress,
-                slideDirection: slideDirection,
-                transitionWidth: transitionWidth,
-                isSelected: isSelected
-            )
+            AimbotPreviewView()
         case .deviceInfo:
             LiquidGlassDeviceInfoTabView(
                 transitionProgress: transitionProgress,

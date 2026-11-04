@@ -164,3 +164,80 @@ private struct PreviewFeatureRow: View {
         .accessibilityHint("Controle apenas visual de prévia")
     }
 }
+
+
+struct AimbotPreviewView: View {
+    @State private var selectedGame = 0
+    @State private var previewToggles = [false, false, false, false, false, true]
+
+    private let accent = Color(red: 1, green: 0.12, blue: 0.19)
+    private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
+    private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
+    private let options = [
+        "MENU",
+        "ONLY ESP",
+        "VIP MOD MENU",
+        "AIM SILENT + ESP",
+        "AIMBOT+ESP ALL +144 FPS",
+        "AIMBOT"
+    ]
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 22) {
+                gameSelector
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("ESP")
+                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .tracking(1.4)
+                        .foregroundStyle(accent)
+                        .padding(.horizontal, 4)
+
+                    VStack(spacing: 9) {
+                        ForEach(options.indices, id: \.self) { index in
+                            PreviewFeatureRow(
+                                title: options[index],
+                                isOn: $previewToggles[index],
+                                cardBackground: cardBackground
+                            )
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 22)
+            .padding(.bottom, 24)
+            .frame(maxWidth: 600)
+            .frame(maxWidth: .infinity)
+        }
+        .background(pageBackground.ignoresSafeArea())
+        .tint(accent)
+    }
+
+    private var gameSelector: some View {
+        HStack(spacing: 0) {
+            gameButton("Free Fire", index: 0)
+            Rectangle()
+                .fill(Color.white.opacity(0.035))
+                .frame(width: 1, height: 34)
+            gameButton("Free Fire MAX", index: 1)
+        }
+        .frame(height: 48)
+        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func gameButton(_ title: String, index: Int) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.16)) { selectedGame = index }
+        } label: {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(selectedGame == index ? accent : Color(white: 0.62))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selectedGame == index ? .isSelected : [])
+    }
+}
