@@ -35,14 +35,16 @@ struct ContentView: View {
         } else if arguments.contains("--simulate-search-tab") {
             initialTab = 5
         } else {
-            initialTab = AppSection.installed.rawValue
+            initialTab = AppSection.home.rawValue
         }
         _tabNavigation = State(initialValue: AppTabNavigationState(selectedTab: initialTab))
         _showSettings = State(
             initialValue: arguments.contains("--simulate-settings")
         )
 #else
-        _tabNavigation = State(initialValue: AppTabNavigationState())
+        _tabNavigation = State(
+            initialValue: AppTabNavigationState(selectedTab: AppSection.home.rawValue)
+        )
 #endif
     }
 
@@ -54,7 +56,7 @@ struct ContentView: View {
                 compactLayout
             }
         }
-        .tint(AppTheme.accent)
+        .tint(Color(red: 1, green: 0.12, blue: 0.19))
         .imageScale(.small)
         .onChange(of: patchDraftCoordinator.request?.id) { requestID in
             if requestID != nil { selectTab(AppSection.installed.rawValue) }
@@ -97,7 +99,8 @@ struct ContentView: View {
                     .tag(section.rawValue)
                 }
             }
-            .toolbarBackground(.hidden, for: .tabBar)
+            .toolbarBackground(Color.black, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
         }
     }
 
@@ -158,10 +161,7 @@ struct ContentView: View {
     ) -> some View {
         switch section {
         case .home:
-            RepositoryHomeView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
+            LiveDashboardView()
         case .new:
             RepositoryNewView(
                 onOpenSettings: openSettings,
@@ -369,6 +369,7 @@ private extension AppSection {
 
     func displayTitle(language: AppLanguage) -> String {
         switch self {
+        case .home: return "LIVE"
         case .installed: return "AVATAR"
         case .patchesSecond: return "CACHE"
         case .deviceInfo: return "PERFIL"
