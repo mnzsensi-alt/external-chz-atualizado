@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		3105A200 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105A020; };
 		3105A201 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105A021; };
+		3105P200 /* PreviewDashboardViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3105P102; };
 		3105N200 /* LiveDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105N100; };
 		3105A203 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105A023; };
 		3105A204 /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105A024; };
@@ -127,6 +128,8 @@
 		3105A111 /* FileManagerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManagerService.swift; sourceTree = "<group>"; };
 		3105A112 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
 		3105N100 /* LiveDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveDashboardView.swift; sourceTree = "<group>"; };
+		3105P101 /* PreviewDashboardViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PreviewDashboardViewController.h; sourceTree = "<group>"; };
+		3105P102 /* PreviewDashboardViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PreviewDashboardViewController.m; sourceTree = "<group>"; };
 		3105A113 /* SupportPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportPolicy.swift; sourceTree = "<group>"; };
 		3105B114 /* PatchProjectModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchProjectModels.swift; sourceTree = "<group>"; };
 		3105B115 /* PatchPackageCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchPackageCodec.swift; sourceTree = "<group>"; };
@@ -248,6 +251,8 @@
 				3105L103 /* RepositoryHomeView.swift */,
 				3105L104 /* RepositorySourcesView.swift */,
 				3105N100 /* LiveDashboardView.swift */,
+				3105P101 /* PreviewDashboardViewController.h */,
+				3105P102 /* PreviewDashboardViewController.m */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -445,6 +450,7 @@
 				3105L204,
 				3105L205,
 				3105N200,
+				3105P200,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
