@@ -66,7 +66,7 @@ struct LiveDashboardView: View {
                         .foregroundStyle(.white)
                 }
                 Spacer(minLength: 36)
-                Text("DEVICE\nCONTROL")
+                Text("CONTROLE\nDO DISPOSITIVO")
                     .font(.system(size: 32, weight: .heavy, design: .rounded))
                     .tracking(-0.7)
                     .lineSpacing(-2)
@@ -82,8 +82,8 @@ struct LiveDashboardView: View {
 
     private var tabSelector: some View {
         HStack(spacing: 28) {
-            tabButton("OVERVIEW", index: 0)
-            tabButton("PREFERENCES", index: 1)
+            tabButton("VISÃO GERAL", index: 0)
+            tabButton("PREFERÊNCIAS", index: 1)
             Spacer(minLength: 0)
         }
         .padding(.top, -8)
@@ -106,12 +106,12 @@ struct LiveDashboardView: View {
 
     private var overviewSections: some View {
         VStack(alignment: .leading, spacing: 27) {
-            section(title: "DEVICE", rows: [
-                SettingRow(title: "Developer mode", isOn: $developerModeEnabled),
-                SettingRow(title: "Cleaner tools", isOn: $cleanerEnabled)
+            section(title: "DISPOSITIVO", rows: [
+                SettingRow(title: "Modo desenvolvedor", isOn: $developerModeEnabled),
+                SettingRow(title: "Ferramentas de limpeza", isOn: $cleanerEnabled)
             ])
-            section(title: "APPEARANCE", rows: [
-                SettingRow(title: "Dark appearance", isOn: $darkModeEnabled)
+            section(title: "APARÊNCIA", rows: [
+                SettingRow(title: "Modo escuro", isOn: $darkModeEnabled)
             ])
         }
     }
@@ -119,11 +119,11 @@ struct LiveDashboardView: View {
     private var preferencesSection: some View {
         VStack(alignment: .leading, spacing: 27) {
             section(title: "INTERFACE", rows: [
-                SettingRow(title: "Dark appearance", isOn: $darkModeEnabled)
+                SettingRow(title: "Modo escuro", isOn: $darkModeEnabled)
             ])
-            section(title: "TOOLS", rows: [
-                SettingRow(title: "Developer mode", isOn: $developerModeEnabled),
-                SettingRow(title: "Cleaner tools", isOn: $cleanerEnabled)
+            section(title: "FERRAMENTAS", rows: [
+                SettingRow(title: "Modo desenvolvedor", isOn: $developerModeEnabled),
+                SettingRow(title: "Ferramentas de limpeza", isOn: $cleanerEnabled)
             ])
         }
     }
@@ -176,8 +176,8 @@ private struct SettingRow: View, Identifiable {
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
-        .accessibilityValue(isOn ? "On" : "Off")
+        .accessibilityValue(isOn ? "Ligado" : "Desligado")
         .accessibilityAddTraits(.isButton)
-        .accessibilityHint("Double tap to toggle")
+        .accessibilityHint("Toque duas vezes para alternar")
     }
 }
