@@ -92,7 +92,7 @@ struct ContentView: View {
                         CompactTabLabel(
                             title: section.displayTitle(language: language),
                             systemImage: section.systemImage,
-                            isReticle: section == .installed,
+                            isReticle: section == .patchesSecond,
                             isProfile: section == .deviceInfo
                         )
                     }
@@ -114,7 +114,7 @@ struct ContentView: View {
                         Label {
                             Text(section.displayTitle(language: language))
                         } icon: {
-                            if section == .installed {
+                            if section == .patchesSecond {
                                 Image(uiImage: ReticleTabIconImage.image)
                             } else if section == .deviceInfo {
                                 ProfileTabIcon()
@@ -369,10 +369,10 @@ private extension AppSection {
 
     func displayTitle(language: AppLanguage) -> String {
         switch self {
-        case .home: return "LIVE"
-        case .installed: return "AVATAR"
-        case .patchesSecond: return "CACHE"
-        case .deviceInfo: return "PERFIL"
+        case .home: return "Function"
+        case .installed: return "Skin"
+        case .patchesSecond: return "AIMBOT"
+        case .deviceInfo: return "Account"
         default: return language.text(titleKey)
         }
     }
@@ -382,10 +382,10 @@ private extension AppSection {
         case .home: return "house.fill"
         case .new: return "clock.fill"
         case .sources: return "shippingbox.fill"
-        case .installed: return "viewfinder"
+        case .installed: return "square.grid.2x2.fill"
         case .files: return "folder.fill"
         case .search: return "magnifyingglass"
-        case .patchesSecond: return "externaldrive.fill"
+        case .patchesSecond: return "viewfinder"
         case .deviceInfo: return "person.fill"
         }
     }
