@@ -1739,9 +1739,6 @@ private struct DeviceInfoGlassCard: View {
 
 
 struct AvatarCacheTabView: View {
-    @Environment(\.appLanguage) private var language
-    @EnvironmentObject private var store: PatchProjectStore
-    @State private var pendingStates: [UUID: Bool] = [:]
     @State private var secondPassPreviewEnabled = false
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
@@ -1768,61 +1765,18 @@ struct AvatarCacheTabView: View {
         self.isSelected = isSelected
     }
 
-    private var filenames: [String] {
-        let visibleFilenames: [String]
-        if groupIndex == 0 {
-            visibleFilenames = [
-                "FF - Hs Pescoço 100-.3105",
-                "FF - Hs Alto 100-.3105",
-                "FF - Hs Pescoço-Alto.3105"
-            ]
-        } else {
-            visibleFilenames = [
-                "FF - Hs Alto Baypss.3105",
-                "HS PESCOÇO.3105",
-                "420 i.3105"
-            ]
-        }
-        let activeHiddenFilenames = BundledPatchCatalog.options.compactMap { option -> String? in
-            guard option.avatarCacheTabIndex == groupIndex,
-                  !visibleFilenames.contains(option.filename),
-                  let item = store.bundledItem(for: option),
-                  store.isApplied(item.id) else { return nil }
-            return option.filename
-        }
-        return visibleFilenames + activeHiddenFilenames
-    }
-
-    private var options: [BundledPatchOption] {
-        filenames.compactMap { BundledPatchCatalog.option(for: $0) }
-    }
-
-    private var tabTitle: String {
-        groupIndex == 0 ? "SKINS" : "CACHE"
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 9) {
-                    Text(tabTitle)
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
-                        .tracking(1.4)
-                        .foregroundStyle(accent)
-                        .padding(.horizontal, 4)
-
-                    ForEach(options) { option in
-                        patchRow(option)
-                    }
-                    if groupIndex == 0 {
-                        secondPassPreviewRow
-                    }
+                VStack(alignment: .leading, spacing: 17) {
+                    AnimatedGIFBanner()
+                    secondPassPreviewRow
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 22)
+                .padding(.top, 8)
                 .padding(.bottom, 24)
                 .frame(maxWidth: 600)
-                .frame(maxWidth: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity)
                 .modifier(TabContentSlideMotion(
                     progress: transitionProgress,
                     width: transitionWidth,
@@ -1834,43 +1788,20 @@ struct AvatarCacheTabView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .tint(accent)
-        .onChange(of: store.isBusy) { busy in
-            if !busy { pendingStates.removeAll() }
-        }
-    }
-
-    private func patchRow(_ option: BundledPatchOption) -> some View {
-        let name = displayName(for: option)
-        let item = store.bundledItem(for: option)
-
-        return HStack(spacing: 13) {
-            Text(name)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 10)
-            patchControl(name: name, item: item)
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 62)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var secondPassPreviewRow: some View {
         HStack(spacing: 13) {
-            Text("SIEL COM SEGUNDO PASSE")
+            Text("siel com segundo passe")
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
             Spacer(minLength: 10)
-            Toggle("Siel com segundo passe", isOn: $secondPassPreviewEnabled)
+            Toggle("siel com segundo passe", isOn: $secondPassPreviewEnabled)
                 .labelsHidden()
                 .toggleStyle(DashboardToggleStyle())
-                .accessibilityLabel("Siel com segundo passe")
+                .accessibilityLabel("siel com segundo passe")
                 .accessibilityHint("Controle visual de prévia")
                 .frame(width: 48, height: 30)
         }
@@ -1878,153 +1809,6 @@ struct AvatarCacheTabView: View {
         .frame(height: 62)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    @ViewBuilder
-    private func patchControl(
-        name: String,
-        item: PatchLibraryItem?
-    ) -> some View {
-        if let item, item.project != nil || store.isApplied(item.id) {
-            Toggle(isOn: Binding(
-                get: { requestedState(for: item.id) },
-                set: { isOn in setActive(isOn, for: item.id) }
-            )) {
-                Text(name)
-            }
-            .labelsHidden()
-            .toggleStyle(DashboardToggleStyle())
-            .accessibilityLabel(name)
-            .accessibilityValue(requestedState(for: item.id) ? "Ligado" : "Desligado")
-            .disabled(store.isBusy || (item.project == nil && !store.isApplied(item.id)))
-        } else if store.isBusy {
-            ProgressView()
-                .controlSize(.small)
-                .tint(Color.white.opacity(0.82))
-                .frame(minWidth: 90)
-                .accessibilityLabel(language.text("patch.bundled.loading"))
-        } else {
-            Button {
-                store.retryBundledPatches()
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "arrow.clockwise")
-                    Text(language.text("patch.bundled.unavailable"))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                }
-                .font(.system(size: 9, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.white.opacity(0.78))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(language.text("patch.bundled.unavailable"))
-            .accessibilityHint(language.text("patch.bundled.retry_hint"))
-        }
-    }
-
-    private func displayName(for option: BundledPatchOption) -> String {
-        switch option.filename {
-        case "420 i.3105": return "HS・PEITO"
-        case "FF - Hs Alto 100-.3105": return "HS・ALTO"
-        case "FF - Hs Alto Baypss.3105": return "HS・ALTO/PESCOÇO"
-        case "FF - Hs Pescoço 100-.3105": return "HS・PESCOÇO"
-        case "FF - Hs Pescoço-Alto.3105": return "HS・ALTO/PESCOÇO"
-        case "HS 100-.3105": return "HS・CORPO"
-        case "HS PESCOÇO - ANTENA-2.3105": return "HS・PESCOÇO + ANTENA"
-        case "HS PESCOÇO.3105": return "HS・PESCOÇO"
-        default: return option.packageName
-        }
-    }
-
-    private func requestedState(for projectID: UUID) -> Bool {
-        pendingStates[projectID] ?? store.isApplied(projectID)
-    }
-
-    private func setActive(_ active: Bool, for projectID: UUID) {
-        guard !store.isBusy else { return }
-        if active {
-            for item in store.items where store.isBundledPatch(item.id) {
-                pendingStates[item.id] = false
-            }
-        }
-        pendingStates[projectID] = active
-        store.setBundledPatch(projectID, active: active)
-    }
-}
-
-private struct LiquidGlassToggleStyle: ToggleStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.colorScheme) private var colorScheme
-
-    func makeBody(configuration: Configuration) -> some View {
-        Button {
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.78)) {
-                configuration.isOn.toggle()
-            }
-        } label: {
-            ZStack(alignment: configuration.isOn ? .trailing : .leading) {
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        Capsule().fill(Color.primary.opacity(configuration.isOn ? 0.18 : 0.055))
-                    }
-                    .overlay {
-                        Capsule().strokeBorder(
-                            LinearGradient(
-                                colors: [
-                                    Color.primary.opacity(colorScheme == .dark ? 0.48 : 0.22),
-                                    Color.primary.opacity(colorScheme == .dark ? 0.10 : 0.07)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 0.9
-                        )
-                    }
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: colorScheme == .dark
-                                ? [Color.white, Color.gray.opacity(0.78)]
-                                : [Color.white, Color.gray.opacity(0.18)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 29, height: 29)
-                    .padding(4)
-                    .overlay {
-                        Circle().strokeBorder(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.15), lineWidth: 0.7)
-                    }
-                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.42 : 0.16), radius: 6, x: 0, y: 2)
-            }
-            .frame(width: 72, height: 40)
-            .opacity(isEnabled ? 1 : 0.44)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(configuration.isOn ? "Desligar" : "Ligar")
-        .accessibilityValue(configuration.isOn ? "Ligado" : "Desligado")
-        .accessibilityAddTraits(.isButton)
-        .disabled(!isEnabled)
-    }
-}
-
-private struct MonochromeGlassBackdrop: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        LinearGradient(
-            gradient: Gradient(stops: [
-                .init(color: Color(white: colorScheme == .dark ? 0.045 : 0.985), location: 0),
-                .init(color: Color(white: colorScheme == .dark ? 0.045 : 0.985), location: 0.61),
-                .init(color: Color(white: colorScheme == .dark ? 0.10 : 0.86), location: 1)
-            ]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }
 

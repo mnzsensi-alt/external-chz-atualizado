@@ -18,11 +18,6 @@ struct LiveDashboardView: View {
                     hero
                     gameSelector
                     featureSection
-                    Text("VIP MODS")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
-                        .tracking(1.4)
-                        .foregroundStyle(accent)
-                        .padding(.top, 1)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -37,45 +32,7 @@ struct LiveDashboardView: View {
     }
 
     private var hero: some View {
-        ZStack(alignment: .bottomLeading) {
-            GeometryReader { proxy in
-                AnimatedGIFView(resourceName: "robot-external")
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-            }
-            LinearGradient(
-                colors: [.black.opacity(0.04), .black.opacity(0.58)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 7, height: 7)
-                    Text("LIVE")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
-                        .tracking(0.5)
-                        .foregroundStyle(.white)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(accent, in: Capsule())
-
-                Spacer()
-
-                Text("ROBOT EXTERNAL")
-                    .font(.system(size: 22, weight: .heavy, design: .rounded))
-                    .tracking(0.2)
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            .padding(16)
-        }
-        .frame(height: 150)
-        .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
-        .accessibilityElement(children: .combine)
+        AnimatedGIFBanner()
     }
 
     private var gameSelector: some View {
@@ -105,14 +62,7 @@ struct LiveDashboardView: View {
     }
 
     private var featureSection: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            Text("BRUTAL FEATURES")
-                .font(.system(size: 11, weight: .heavy, design: .rounded))
-                .tracking(1.4)
-                .foregroundStyle(accent)
-                .padding(.horizontal, 4)
-                .padding(.bottom, 1)
-
+        VStack(spacing: 9) {
             ForEach(features.indices, id: \.self) { index in
                 PreviewFeatureRow(
                     title: features[index],
@@ -121,6 +71,19 @@ struct LiveDashboardView: View {
                 )
             }
         }
+    }
+}
+
+struct AnimatedGIFBanner: View {
+    var body: some View {
+        GeometryReader { proxy in
+            AnimatedGIFView(resourceName: "robot-external")
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
+        }
+        .frame(height: 150)
+        .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
+        .accessibilityLabel("Animação do banner")
     }
 }
 
@@ -187,21 +150,13 @@ struct AimbotPreviewView: View {
             VStack(alignment: .leading, spacing: 22) {
                 gameSelector
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("ESP")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
-                        .tracking(1.4)
-                        .foregroundStyle(accent)
-                        .padding(.horizontal, 4)
-
-                    VStack(spacing: 9) {
-                        ForEach(options.indices, id: \.self) { index in
-                            PreviewFeatureRow(
-                                title: options[index],
-                                isOn: $previewToggles[index],
-                                cardBackground: cardBackground
-                            )
-                        }
+                VStack(spacing: 9) {
+                    ForEach(options.indices, id: \.self) { index in
+                        PreviewFeatureRow(
+                            title: options[index],
+                            isOn: $previewToggles[index],
+                            cardBackground: cardBackground
+                        )
                     }
                 }
             }
@@ -243,7 +198,7 @@ struct AimbotPreviewView: View {
 }
 
 
-private struct AnimatedGIFView: UIViewRepresentable {
+struct AnimatedGIFView: UIViewRepresentable {
     let resourceName: String
 
     func makeUIView(context: Context) -> UIImageView {
