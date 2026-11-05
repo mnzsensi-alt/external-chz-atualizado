@@ -3,7 +3,7 @@ import ImageIO
 import UIKit
 
 struct LiveDashboardView: View {
-    @State private var selectedGame = 0
+    @StateObject private var gameMode = GameModeTransitionState()
     @State private var previewFeatures = [false, true, true, false, false]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
@@ -35,26 +35,88 @@ struct LiveDashboardView: View {
     }
 
     private var gameSelector: some View {
-        GameModeSelector(selectedGame: $selectedGame, accent: accent, cardBackground: cardBackground)
+        GameModeSelector(state: gameMode, accent: accent, cardBackground: cardBackground)
     }
 
     private var featureSection: some View {
-        VStack(spacing: 9) {
-            ForEach(features.indices, id: \.self) { index in
-                PreviewFeatureRow(
-                    title: features[index],
-                    isOn: $previewFeatures[index],
-                    cardBackground: cardBackground
-                )
+        GameModeContentTransition(state: gameMode) { _ in
+            VStack(spacing: 9) {
+                ForEach(features.indices, id: \.self) { index in
+                    PreviewFeatureRow(
+                        title: features[index],
+                        isOn: $previewFeatures[index],
+                        cardBackground: cardBackground
+                    )
+                }
+            }
+        }
+        .frame(height: CGFloat(features.count * 62 + (features.count - 1) * 9))
+    }
+}
+
+private final class GameModeTransitionState: ObservableObject {
+    @Published private(set) var selectedGame = 0
+    @Published private(set) var outgoingGame: Int?
+    @Published private(set) var progress: CGFloat = 1
+    @Published private(set) var direction: CGFloat = 1
+    private var transitionToken = UUID()
+
+    func select(_ game: Int) {
+        guard game != selectedGame, outgoingGame == nil else { return }
+        let source = selectedGame
+        direction = game > source ? 1 : -1
+        outgoingGame = source
+        selectedGame = game
+        progress = 0
+
+        let token = UUID()
+        transitionToken = token
+        DispatchQueue.main.async {
+            guard self.transitionToken == token else { return }
+            withAnimation(.easeInOut(duration: 0.34)) {
+                self.progress = 1
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
+                guard self.transitionToken == token else { return }
+                self.outgoingGame = nil
             }
         }
     }
 }
 
+private struct GameModeContentTransition<Content: View>: View {
+    @ObservedObject var state: GameModeTransitionState
+    let content: (Int) -> Content
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .topLeading) {
+                if let outgoingGame = state.outgoingGame {
+                    content(outgoingGame)
+                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
+                        .offset(x: -state.direction * proxy.size.width * state.progress)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                        .zIndex(0)
+                }
+
+                content(state.selectedGame)
+                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
+                    .offset(x: state.outgoingGame == nil ? 0 : state.direction * proxy.size.width * (1 - state.progress))
+                    .zIndex(1)
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
+        }
+    }
+}
+
 private struct GameModeSelector: View {
-    @Binding var selectedGame: Int
+    @ObservedObject var state: GameModeTransitionState
     let accent: Color
     let cardBackground: Color
+
+    private var selectedGame: Int { state.selectedGame }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -74,21 +136,21 @@ private struct GameModeSelector: View {
                         x: proxy.size.width * (selectedGame == 0 ? 0.25 : 0.75),
                         y: proxy.size.height - 3
                     )
-                    .animation(.spring(response: 0.38, dampingFraction: 0.82), value: selectedGame)
+                    .animation(.easeInOut(duration: 0.34), value: selectedGame)
             }
         }
         .liquidGlassSurface(cornerRadius: 16, tint: accent)
+        .disabled(state.outgoingGame != nil)
     }
 
     private func gameButton(_ title: String, index: Int) -> some View {
         Button {
-            withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
-                selectedGame = index
-            }
+            state.select(index)
         } label: {
             Text(title)
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                 .foregroundStyle(selectedGame == index ? accent : Color(white: 0.62))
+                .animation(.easeInOut(duration: 0.34), value: selectedGame)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
         }
@@ -160,7 +222,7 @@ private struct PreviewFeatureRow: View {
 
 
 struct AimbotPreviewView: View {
-    @State private var selectedGame = 0
+    @StateObject private var gameMode = GameModeTransitionState()
     @State private var previewToggles = [false, false, false, false, false, true]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
@@ -179,15 +241,7 @@ struct AimbotPreviewView: View {
             VStack(alignment: .leading, spacing: 22) {
                 gameSelector
 
-                VStack(spacing: 9) {
-                    ForEach(options.indices, id: \.self) { index in
-                        PreviewFeatureRow(
-                            title: options[index],
-                            isOn: $previewToggles[index],
-                            cardBackground: cardBackground
-                        )
-                    }
-                }
+                featureSection
             }
             .padding(.horizontal, 16)
             .padding(.top, 22)
@@ -200,7 +254,22 @@ struct AimbotPreviewView: View {
     }
 
     private var gameSelector: some View {
-        GameModeSelector(selectedGame: $selectedGame, accent: accent, cardBackground: cardBackground)
+        GameModeSelector(state: gameMode, accent: accent, cardBackground: cardBackground)
+    }
+
+    private var featureSection: some View {
+        GameModeContentTransition(state: gameMode) { _ in
+            VStack(spacing: 9) {
+                ForEach(options.indices, id: \.self) { index in
+                    PreviewFeatureRow(
+                        title: options[index],
+                        isOn: $previewToggles[index],
+                        cardBackground: cardBackground
+                    )
+                }
+            }
+        }
+        .frame(height: CGFloat(options.count * 62 + (options.count - 1) * 9))
     }
 }
 
