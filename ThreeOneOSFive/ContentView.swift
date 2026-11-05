@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var tabSlideDirection: TabSlideDirection = .forward
     @State private var tabTransitionProgress: CGFloat = 1
     @State private var tabTransitionToken = UUID()
+    @State private var transitionSourceTab: Int?
     @State private var showSettings = false
     @State private var showLogs = false
 
@@ -81,13 +82,7 @@ struct ContentView: View {
         GeometryReader { geometry in
             TabView(selection: tabSelection) {
                 ForEach(featureVisibility.visibleSections) { section in
-                    sectionContent(
-                        section,
-                        transitionProgress: tabTransitionProgress,
-                        slideDirection: tabSlideDirection == .forward ? 1 : -1,
-                        transitionWidth: geometry.size.width,
-                        isSelected: section.rawValue == tabNavigation.selectedTab
-                    )
+                    Color.clear
                     .tabItem {
                         CompactTabLabel(
                             title: section.displayTitle(language: language),
@@ -101,6 +96,12 @@ struct ContentView: View {
             }
             .toolbarBackground(Color.black, for: .tabBar)
             .toolbarBackground(.visible, for: .tabBar)
+            .overlay(alignment: .top) {
+                let contentHeight = max(0, geometry.size.height - 50)
+                slidingTabContent(width: geometry.size.width, height: contentHeight)
+                    .frame(width: geometry.size.width, height: contentHeight)
+                    .clipped()
+            }
         }
     }
 
@@ -140,25 +141,13 @@ struct ContentView: View {
             .navigationTitle("3105")
             .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 300)
         } detail: {
-            sectionContent(
-                selectedVisibleSection,
-                transitionProgress: tabTransitionProgress,
-                slideDirection: tabSlideDirection == .forward ? 1 : -1,
-                transitionWidth: 500,
-                isSelected: true
-            )
+            slidingTabContent(width: 500, height: nil)
         }
         .navigationSplitViewStyle(.balanced)
     }
 
     @ViewBuilder
-    private func sectionContent(
-        _ section: AppSection,
-        transitionProgress: CGFloat = 1,
-        slideDirection: CGFloat = 1,
-        transitionWidth: CGFloat = 0,
-        isSelected: Bool = true
-    ) -> some View {
+    private func sectionContent(_ section: AppSection) -> some View {
         Group {
             switch section {
             case .home:
@@ -192,12 +181,53 @@ struct ContentView: View {
                 )
             }
         }
-        .modifier(TabSlideTransition(
-            progress: transitionProgress,
-            direction: slideDirection,
-            width: transitionWidth,
-            isSelected: isSelected
-        ))
+    }
+
+    private func slidingTabContent(width: CGFloat, height: CGFloat?) -> some View {
+        let direction: CGFloat = tabSlideDirection == .forward ? 1 : -1
+        let progress = min(max(tabTransitionProgress, 0), 1)
+
+        return ZStack(alignment: .top) {
+            ForEach(featureVisibility.visibleSections) { section in
+                let isCurrent = section == selectedVisibleSection
+                let isSource = section.rawValue == transitionSourceTab
+                let offset = slideOffset(
+                    for: section,
+                    isCurrent: isCurrent,
+                    isSource: isSource,
+                    direction: direction,
+                    progress: progress,
+                    width: width
+                )
+
+                sectionContent(section)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .offset(x: offset)
+                    .zIndex(isCurrent ? 2 : (isSource ? 1 : 0))
+                    .allowsHitTesting(isCurrent)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(height: height)
+        .clipped()
+    }
+
+    private func slideOffset(
+        for section: AppSection,
+        isCurrent: Bool,
+        isSource: Bool,
+        direction: CGFloat,
+        progress: CGFloat,
+        width: CGFloat
+    ) -> CGFloat {
+        if isCurrent {
+            guard transitionSourceTab != nil else { return 0 }
+            return direction * width * (1 - progress)
+        }
+        if isSource {
+            return -direction * width * progress
+        }
+        return direction * width
     }
 
     private var tabSelection: Binding<Int> {
@@ -212,6 +242,7 @@ struct ContentView: View {
         let sections = featureVisibility.visibleSections
         let currentIndex = sections.firstIndex { $0.rawValue == tabNavigation.selectedTab } ?? 0
         let nextIndex = sections.firstIndex { $0.rawValue == selectedTab } ?? currentIndex
+        transitionSourceTab = tabNavigation.selectedTab
         tabSlideDirection = nextIndex >= currentIndex ? .forward : .backward
 
         let token = UUID()
@@ -227,6 +258,10 @@ struct ContentView: View {
             guard tabTransitionToken == token else { return }
             withAnimation(.easeInOut(duration: 0.34)) {
                 tabTransitionProgress = 1
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
+                guard tabTransitionToken == token else { return }
+                transitionSourceTab = nil
             }
         }
     }
@@ -272,25 +307,6 @@ struct ContentView: View {
 private enum TabSlideDirection {
     case forward
     case backward
-}
-
-private struct TabSlideTransition: AnimatableModifier {
-    var progress: CGFloat
-    let direction: CGFloat
-    let width: CGFloat
-    let isSelected: Bool
-
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
-    }
-
-    func body(content: Content) -> some View {
-        let amount = isSelected ? min(max(progress, 0), 1) : 1
-        let slide = (1 - amount) * width * direction
-        return content
-            .offset(x: slide)
-    }
 }
 
 private struct CompactTabLabel: View {
