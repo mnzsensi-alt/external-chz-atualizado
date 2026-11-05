@@ -1740,9 +1740,13 @@ private struct DeviceInfoGlassCard: View {
 
 struct AvatarCacheTabView: View {
     @Environment(\.appLanguage) private var language
-    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var store: PatchProjectStore
     @State private var pendingStates: [UUID: Bool] = [:]
+    @State private var secondPassPreviewEnabled = false
+
+    private let accent = Color(red: 1, green: 0.12, blue: 0.19)
+    private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
+    private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
 
     let groupIndex: Int
     let transitionProgress: CGFloat
@@ -1794,22 +1798,31 @@ struct AvatarCacheTabView: View {
     }
 
     private var tabTitle: String {
-        groupIndex == 0 ? "AVATAR" : "CACHE"
+        groupIndex == 0 ? "SKINS" : "CACHE"
     }
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                MonochromeGlassBackdrop()
-                VStack(spacing: 13) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 9) {
+                    Text(tabTitle)
+                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .tracking(1.4)
+                        .foregroundStyle(accent)
+                        .padding(.horizontal, 4)
+
                     ForEach(options) { option in
                         patchRow(option)
                     }
+                    if groupIndex == 0 {
+                        secondPassPreviewRow
+                    }
                 }
-                .padding(.horizontal, 17)
+                .padding(.horizontal, 16)
                 .padding(.top, 22)
-                .padding(.bottom, 16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.bottom, 24)
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity, alignment: .top)
                 .modifier(TabContentSlideMotion(
                     progress: transitionProgress,
                     width: transitionWidth,
@@ -1817,24 +1830,10 @@ struct AvatarCacheTabView: View {
                     isSelected: isSelected
                 ))
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(tabTitle)
-                        .font(.system(size: 22, weight: .black, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .modifier(TabContentSlideMotion(
-                            progress: transitionProgress,
-                            width: transitionWidth,
-                            direction: slideDirection,
-                            isSelected: isSelected
-                        ))
-                }
-            }
+            .background(pageBackground.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
         }
-        .tint(AppTheme.accent)
+        .tint(accent)
         .onChange(of: store.isBusy) { busy in
             if !busy { pendingStates.removeAll() }
         }
@@ -1846,64 +1845,40 @@ struct AvatarCacheTabView: View {
 
         return HStack(spacing: 13) {
             Text(name)
-                .font(.system(size: 15, weight: .black, design: .rounded))
-                .tracking(0.35)
-                .foregroundStyle(.primary)
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 6)
+            Spacer(minLength: 10)
             patchControl(name: name, item: item)
+                .frame(width: 48, height: 30)
         }
-        .padding(.horizontal, 17)
-        .padding(.vertical, 15)
+        .padding(.horizontal, 16)
+        .frame(height: 62)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: colorScheme == .dark
-                                    ? [Color.white.opacity(0.13), Color.white.opacity(0.035), Color.black.opacity(0.17)]
-                                    : [Color.white.opacity(0.92), Color.white.opacity(0.62), Color.black.opacity(0.025)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                }
+        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var secondPassPreviewRow: some View {
+        HStack(spacing: 13) {
+            Text("SIEL COM SEGUNDO PASSE")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+            Spacer(minLength: 10)
+            Toggle("Siel com segundo passe", isOn: $secondPassPreviewEnabled)
+                .labelsHidden()
+                .toggleStyle(DashboardToggleStyle())
+                .accessibilityLabel("Siel com segundo passe")
+                .accessibilityHint("Controle visual de prévia")
+                .frame(width: 48, height: 30)
         }
-        .overlay(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            (colorScheme == .dark ? Color.white : Color.black)
-                                .opacity(colorScheme == .dark ? 0.13 : 0.025),
-                            .clear
-                        ],
-                        center: .topLeading,
-                        startRadius: 0,
-                        endRadius: 250
-                    )
-                )
-                .allowsHitTesting(false)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: colorScheme == .dark
-                            ? [Color.white.opacity(0.42), Color.white.opacity(0.075), Color.gray.opacity(0.19)]
-                            : [Color.white.opacity(0.95), Color.gray.opacity(0.28), Color.black.opacity(0.08)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.9
-                )
-        }
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.42 : 0.10), radius: 22, x: 0, y: 12)
+        .padding(.horizontal, 16)
+        .frame(height: 62)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     @ViewBuilder
@@ -1919,14 +1894,14 @@ struct AvatarCacheTabView: View {
                 Text(name)
             }
             .labelsHidden()
-            .toggleStyle(LiquidGlassToggleStyle())
+            .toggleStyle(DashboardToggleStyle())
             .accessibilityLabel(name)
             .accessibilityValue(requestedState(for: item.id) ? "Ligado" : "Desligado")
             .disabled(store.isBusy || (item.project == nil && !store.isApplied(item.id)))
         } else if store.isBusy {
             ProgressView()
                 .controlSize(.small)
-                .tint(colorScheme == .dark ? Color.white : Color.primary)
+                .tint(Color.white.opacity(0.82))
                 .frame(minWidth: 90)
                 .accessibilityLabel(language.text("patch.bundled.loading"))
         } else {
@@ -1940,7 +1915,7 @@ struct AvatarCacheTabView: View {
                         .minimumScaleFactor(0.75)
                 }
                 .font(.system(size: 9, weight: .bold, design: .rounded))
-                .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : Color.primary.opacity(0.78))
+                .foregroundStyle(Color.white.opacity(0.78))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(language.text("patch.bundled.unavailable"))
@@ -2075,8 +2050,11 @@ private struct TabContentSlideMotion: AnimatableModifier {
 }
 
 struct LiquidGlassDeviceInfoTabView: View {
-    @Environment(\.colorScheme) private var colorScheme
     @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
+
+    private let accent = Color(red: 1, green: 0.12, blue: 0.19)
+    private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
+    private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
 
     let transitionProgress: CGFloat
     let slideDirection: CGFloat
@@ -2129,16 +2107,35 @@ struct LiquidGlassDeviceInfoTabView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                MonochromeGlassBackdrop()
-                VStack(spacing: 14) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Text("ACCOUNT")
+                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                            .tracking(1.4)
+                            .foregroundStyle(accent)
+                        Spacer()
+                        Button {
+                            darkModeEnabled.toggle()
+                        } label: {
+                            Image(systemName: darkModeEnabled ? "sun.max.fill" : "moon.fill")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 38, height: 38)
+                                .background(cardBackground, in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(darkModeEnabled ? "Ativar modo claro" : "Ativar modo escuro")
+                    }
+
                     deviceSummaryCard
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 17)
+                .padding(.horizontal, 16)
                 .padding(.top, 18)
-                .padding(.bottom, 16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.bottom, 24)
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity, alignment: .top)
                 .modifier(TabContentSlideMotion(
                     progress: transitionProgress,
                     width: transitionWidth,
@@ -2146,56 +2143,22 @@ struct LiquidGlassDeviceInfoTabView: View {
                     isSelected: isSelected
                 ))
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("PERFIL")
-                        .font(.system(size: 22, weight: .black, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .modifier(TabContentSlideMotion(
-                            progress: transitionProgress,
-                            width: transitionWidth,
-                            direction: slideDirection,
-                            isSelected: isSelected
-                        ))
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        darkModeEnabled.toggle()
-                    } label: {
-                        Image(systemName: darkModeEnabled ? "sun.max.fill" : "moon.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.primary)
-                            .frame(width: 38, height: 38)
-                            .background(.ultraThinMaterial, in: Circle())
-                            .overlay {
-                                Circle()
-                                    .strokeBorder(
-                                        Color.primary.opacity(colorScheme == .dark ? 0.20 : 0.12),
-                                        lineWidth: 0.8
-                                    )
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(darkModeEnabled ? "Ativar modo claro" : "Ativar modo escuro")
-                }
-            }
+            .background(pageBackground.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
         }
-        .tint(AppTheme.accent)
+        .tint(accent)
     }
 
     private var deviceSummaryCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("DISPOSITIVO")
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .tracking(0.9)
-                .foregroundStyle(.primary)
+                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .tracking(1.2)
+                .foregroundStyle(accent)
             deviceInfoRow(title: "MODELO DO IPHONE", symbol: "iphone", value: AppInfo.hardwareDisplayName)
-            Divider()
+            Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1)
             deviceInfoRow(title: "VERSÃO DO iOS", symbol: "gearshape", value: AppInfo.osVersion)
-            Divider()
+            Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1)
             deviceInfoRow(
                 title: "COMPATIBILIDADE",
                 symbol: "exclamationmark.triangle.fill",
@@ -2211,16 +2174,16 @@ struct LiquidGlassDeviceInfoTabView: View {
         HStack(spacing: 10) {
             Image(systemName: symbol)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(accent)
                 .frame(width: 18)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 9, weight: .heavy, design: .rounded))
                     .tracking(0.7)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color(white: 0.62))
                 Text(value)
                     .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.white)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -2228,25 +2191,8 @@ struct LiquidGlassDeviceInfoTabView: View {
     }
 
     private func profileCardSurface() -> some View {
-        RoundedRectangle(cornerRadius: 25, style: .continuous)
-            .fill(.ultraThinMaterial)
-            .overlay {
-                RoundedRectangle(cornerRadius: 25, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: colorScheme == .dark
-                                ? [Color.white.opacity(0.13), Color.white.opacity(0.035), Color.black.opacity(0.17)]
-                                : [Color.white.opacity(0.92), Color.white.opacity(0.62), Color.black.opacity(0.025)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 25, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(colorScheme == .dark ? 0.20 : 0.12), lineWidth: 0.9)
-            }
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.40 : 0.08), radius: 22, x: 0, y: 12)
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(cardBackground)
     }
 
 

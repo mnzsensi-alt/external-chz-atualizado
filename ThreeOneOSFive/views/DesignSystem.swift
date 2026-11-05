@@ -121,3 +121,28 @@ struct AppLogo: View {
         .accessibilityHidden(true)
     }
 }
+
+struct DashboardToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.24, dampingFraction: 0.8)) {
+                configuration.isOn.toggle()
+            }
+        } label: {
+            ZStack(alignment: configuration.isOn ? .trailing : .leading) {
+                Capsule()
+                    .fill(Color(red: 0.11, green: 0.11, blue: 0.13))
+                    .frame(width: 48, height: 30)
+                Circle()
+                    .fill(configuration.isOn ? Color.white : Color(white: 0.61))
+                    .frame(width: 24, height: 24)
+                    .padding(3)
+            }
+            .frame(width: 48, height: 30)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(configuration.isOn ? "Ligado" : "Desligado")
+        .accessibilityAddTraits(.isButton)
+    }
+}

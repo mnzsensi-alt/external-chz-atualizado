@@ -1,4 +1,6 @@
 import SwiftUI
+import ImageIO
+import UIKit
 
 struct LiveDashboardView: View {
     @State private var selectedGame = 0
@@ -37,9 +39,7 @@ struct LiveDashboardView: View {
     private var hero: some View {
         ZStack(alignment: .bottomLeading) {
             GeometryReader { proxy in
-                Image("LiveHeroBackground")
-                    .resizable()
-                    .scaledToFill()
+                AnimatedGIFView(resourceName: "robot-external")
                     .frame(width: proxy.size.width, height: proxy.size.height)
                     .clipped()
             }
@@ -239,5 +239,52 @@ struct AimbotPreviewView: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selectedGame == index ? .isSelected : [])
+    }
+}
+
+
+private struct AnimatedGIFView: UIViewRepresentable {
+    let resourceName: String
+
+    func makeUIView(context: Context) -> UIImageView {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+
+        guard let url = Bundle.main.url(forResource: resourceName, withExtension: "gif"),
+              let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+            return imageView
+        }
+
+        var frames: [UIImage] = []
+        var totalDuration: TimeInterval = 0
+        let frameCount = CGImageSourceGetCount(source)
+
+        for index in 0..<frameCount {
+            guard let cgImage = CGImageSourceCreateImageAtIndex(source, index, nil) else { continue }
+            frames.append(UIImage(cgImage: cgImage))
+
+            let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any]
+            let gifProperties = properties?[kCGImagePropertyGIFDictionary] as? [CFString: Any]
+            let unclampedDelay = gifProperties?[kCGImagePropertyGIFUnclampedDelayTime] as? TimeInterval
+            let clampedDelay = gifProperties?[kCGImagePropertyGIFDelayTime] as? TimeInterval
+            totalDuration += max(unclampedDelay ?? clampedDelay ?? 0.035, 0.02)
+        }
+
+        if frames.count > 1 {
+            imageView.animationImages = frames
+            imageView.animationDuration = max(totalDuration, 0.1)
+            imageView.animationRepeatCount = 0
+            imageView.startAnimating()
+        } else {
+            imageView.image = frames.first
+        }
+        return imageView
+    }
+
+    func updateUIView(_ uiView: UIImageView, context: Context) {
+        if !uiView.isAnimating, uiView.animationImages?.isEmpty == false {
+            uiView.startAnimating()
+        }
     }
 }
