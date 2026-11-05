@@ -159,48 +159,44 @@ struct ContentView: View {
         transitionWidth: CGFloat = 0,
         isSelected: Bool = true
     ) -> some View {
-        switch section {
-        case .home:
-            LiveDashboardView()
-        case .new:
-            RepositoryNewView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
-        case .sources:
-            RepositorySourcesView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
-        case .installed:
-            AvatarCacheTabView(
-                groupIndex: 0,
-                transitionProgress: transitionProgress,
-                slideDirection: slideDirection,
-                transitionWidth: transitionWidth,
-                isSelected: isSelected
-            )
-        case .patchesSecond:
-            AimbotPreviewView()
-        case .deviceInfo:
-            LiquidGlassDeviceInfoTabView(
-                transitionProgress: transitionProgress,
-                slideDirection: slideDirection,
-                transitionWidth: transitionWidth,
-                isSelected: isSelected
-            )
-        case .files:
-            AppDataBrowserView(
-                tabSession: filesTabSession,
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
-        case .search:
-            RepositorySearchView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
+        Group {
+            switch section {
+            case .home:
+                LiveDashboardView()
+            case .new:
+                RepositoryNewView(
+                    onOpenSettings: openSettings,
+                    onOpenLogs: openLogs
+                )
+            case .sources:
+                RepositorySourcesView(
+                    onOpenSettings: openSettings,
+                    onOpenLogs: openLogs
+                )
+            case .installed:
+                AvatarCacheTabView()
+            case .patchesSecond:
+                AimbotPreviewView()
+            case .deviceInfo:
+                LiquidGlassDeviceInfoTabView()
+            case .files:
+                AppDataBrowserView(
+                    tabSession: filesTabSession,
+                    onOpenSettings: openSettings,
+                    onOpenLogs: openLogs
+                )
+            case .search:
+                RepositorySearchView(
+                    onOpenSettings: openSettings,
+                    onOpenLogs: openLogs
+                )
+            }
         }
+        .modifier(TabTurnTransition(
+            progress: transitionProgress,
+            direction: slideDirection,
+            isSelected: isSelected
+        ))
     }
 
     private var tabSelection: Binding<Int> {
@@ -275,6 +271,31 @@ struct ContentView: View {
 private enum TabSlideDirection {
     case forward
     case backward
+}
+
+private struct TabTurnTransition: AnimatableModifier {
+    var progress: CGFloat
+    let direction: CGFloat
+    let isSelected: Bool
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        let amount = isSelected ? min(max(progress, 0), 1) : 1
+        let angle = Double((1 - amount) * direction * 82)
+        return content
+            .rotation3DEffect(
+                .degrees(angle),
+                axis: (x: 0, y: 1, z: 0),
+                anchor: .center,
+                perspective: 0.72
+            )
+            .scaleEffect(0.965 + 0.035 * amount)
+            .opacity(0.72 + 0.28 * amount)
+    }
 }
 
 private struct CompactTabLabel: View {

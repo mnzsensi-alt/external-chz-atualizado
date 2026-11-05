@@ -1745,26 +1745,6 @@ struct AvatarCacheTabView: View {
     private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
 
-    let groupIndex: Int
-    let transitionProgress: CGFloat
-    let slideDirection: CGFloat
-    let transitionWidth: CGFloat
-    let isSelected: Bool
-
-    init(
-        groupIndex: Int,
-        transitionProgress: CGFloat = 1,
-        slideDirection: CGFloat = 1,
-        transitionWidth: CGFloat = 0,
-        isSelected: Bool = true
-    ) {
-        self.groupIndex = groupIndex
-        self.transitionProgress = transitionProgress
-        self.slideDirection = slideDirection
-        self.transitionWidth = transitionWidth
-        self.isSelected = isSelected
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
@@ -1777,12 +1757,6 @@ struct AvatarCacheTabView: View {
                 .padding(.bottom, 24)
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity)
-                .modifier(TabContentSlideMotion(
-                    progress: transitionProgress,
-                    width: transitionWidth,
-                    direction: slideDirection,
-                    isSelected: isSelected
-                ))
             }
             .background(pageBackground.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
@@ -1792,16 +1766,16 @@ struct AvatarCacheTabView: View {
 
     private var secondPassPreviewRow: some View {
         HStack(spacing: 13) {
-            Text("siel com segundo passe")
+            Text("SIEL COM SEGUNDO PASSE")
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
             Spacer(minLength: 10)
-            Toggle("siel com segundo passe", isOn: $secondPassPreviewEnabled)
+            Toggle("SIEL COM SEGUNDO PASSE", isOn: $secondPassPreviewEnabled)
                 .labelsHidden()
                 .toggleStyle(DashboardToggleStyle())
-                .accessibilityLabel("siel com segundo passe")
+                .accessibilityLabel("SIEL COM SEGUNDO PASSE")
                 .accessibilityHint("Controle visual de prévia")
                 .frame(width: 48, height: 30)
         }
@@ -1812,49 +1786,12 @@ struct AvatarCacheTabView: View {
     }
 }
 
-private struct TabContentSlideMotion: AnimatableModifier {
-    var progress: CGFloat
-    let width: CGFloat
-    let direction: CGFloat
-    let isSelected: Bool
-
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
-    }
-
-    func body(content: Content) -> some View {
-        let clampedProgress = min(max(progress, 0), 1)
-        let motion = isSelected ? 1 - clampedProgress : 0
-        content
-            .blur(radius: 8 * motion)
-            .offset(x: width * direction * motion)
-    }
-}
-
 struct LiquidGlassDeviceInfoTabView: View {
     @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
-
-    let transitionProgress: CGFloat
-    let slideDirection: CGFloat
-    let transitionWidth: CGFloat
-    let isSelected: Bool
-
-    init(
-        transitionProgress: CGFloat = 1,
-        slideDirection: CGFloat = 1,
-        transitionWidth: CGFloat = 0,
-        isSelected: Bool = true
-    ) {
-        self.transitionProgress = transitionProgress
-        self.slideDirection = slideDirection
-        self.transitionWidth = transitionWidth
-        self.isSelected = isSelected
-    }
 
     private enum CompatibilityStatus {
         case compatible
@@ -1919,12 +1856,6 @@ struct LiquidGlassDeviceInfoTabView: View {
                 .padding(.bottom, 24)
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity, alignment: .top)
-                .modifier(TabContentSlideMotion(
-                    progress: transitionProgress,
-                    width: transitionWidth,
-                    direction: slideDirection,
-                    isSelected: isSelected
-                ))
             }
             .background(pageBackground.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
