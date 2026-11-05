@@ -1852,7 +1852,6 @@ struct AvatarCacheTabView: View {
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 10)
             patchControl(name: name, item: item)
-                .frame(width: 48, height: 30)
         }
         .padding(.horizontal, 16)
         .frame(height: 62)
