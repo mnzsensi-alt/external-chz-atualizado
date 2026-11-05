@@ -222,7 +222,6 @@ private struct PreviewFeatureRow: View {
 
 
 struct AimbotPreviewView: View {
-    @StateObject private var gameMode = GameModeTransitionState()
     @State private var previewToggles = [false, false, false, false, false, true]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
@@ -239,8 +238,6 @@ struct AimbotPreviewView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
-                gameSelector
-
                 featureSection
             }
             .padding(.horizontal, 16)
@@ -253,26 +250,18 @@ struct AimbotPreviewView: View {
         .tint(accent)
     }
 
-    private var gameSelector: some View {
-        GameModeSelector(state: gameMode, accent: accent, cardBackground: cardBackground)
-    }
-
     private var featureSection: some View {
-        GameModeContentTransition(state: gameMode) { _ in
-            VStack(spacing: 9) {
-                ForEach(options.indices, id: \.self) { index in
-                    PreviewFeatureRow(
-                        title: options[index],
-                        isOn: $previewToggles[index],
-                        cardBackground: cardBackground
-                    )
-                }
+        VStack(spacing: 9) {
+            ForEach(options.indices, id: \.self) { index in
+                PreviewFeatureRow(
+                    title: options[index],
+                    isOn: $previewToggles[index],
+                    cardBackground: cardBackground
+                )
             }
         }
-        .frame(height: CGFloat(options.count * 62 + (options.count - 1) * 9))
     }
 }
-
 
 struct AnimatedGIFView: UIViewRepresentable {
     let resourceName: String

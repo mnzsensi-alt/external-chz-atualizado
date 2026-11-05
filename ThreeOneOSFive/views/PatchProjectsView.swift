@@ -1711,16 +1711,22 @@ private struct DeviceInfoGlassCard: View {
 
 
 struct AvatarCacheTabView: View {
-    @State private var secondPassPreviewEnabled = false
+    @State private var skinPreviewEnabled = [false, false, false, false]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
+    private let skinFeatures = [
+        "PULANTE + 2 PASSE",
+        "SONIC",
+        "PULANTE",
+        "MORDECAI"
+    ]
 
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 17) {
                     AnimatedGIFBanner()
-                    secondPassPreviewRow
+                    featureSection
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -1734,18 +1740,26 @@ struct AvatarCacheTabView: View {
         .tint(accent)
     }
 
-    private var secondPassPreviewRow: some View {
+    private var featureSection: some View {
+        VStack(spacing: 9) {
+            ForEach(skinFeatures.indices, id: \.self) { index in
+                featureRow(index)
+            }
+        }
+    }
+
+    private func featureRow(_ index: Int) -> some View {
         HStack(spacing: 13) {
-            Text("SIEL COM SEGUNDO PASSE")
+            Text(skinFeatures[index])
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
             Spacer(minLength: 10)
-            Toggle("SIEL COM SEGUNDO PASSE", isOn: $secondPassPreviewEnabled)
+            Toggle(skinFeatures[index], isOn: $skinPreviewEnabled[index])
                 .labelsHidden()
                 .toggleStyle(DashboardToggleStyle())
-                .accessibilityLabel("SIEL COM SEGUNDO PASSE")
+                .accessibilityLabel(skinFeatures[index])
                 .accessibilityHint("Controle visual de prévia")
                 .frame(width: 48, height: 30)
         }
@@ -1755,7 +1769,6 @@ struct AvatarCacheTabView: View {
         .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
     }
 }
-
 struct LiquidGlassDeviceInfoTabView: View {
     @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
 
