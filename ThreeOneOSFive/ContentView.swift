@@ -195,6 +195,7 @@ struct ContentView: View {
         .modifier(TabTurnTransition(
             progress: transitionProgress,
             direction: slideDirection,
+            width: transitionWidth,
             isSelected: isSelected
         ))
     }
@@ -276,6 +277,7 @@ private enum TabSlideDirection {
 private struct TabTurnTransition: AnimatableModifier {
     var progress: CGFloat
     let direction: CGFloat
+    let width: CGFloat
     let isSelected: Bool
 
     var animatableData: CGFloat {
@@ -285,7 +287,8 @@ private struct TabTurnTransition: AnimatableModifier {
 
     func body(content: Content) -> some View {
         let amount = isSelected ? min(max(progress, 0), 1) : 1
-        let angle = Double((1 - amount) * direction * 82)
+        let remaining = 1 - amount
+        let angle = Double(remaining * direction * 18)
         return content
             .rotation3DEffect(
                 .degrees(angle),
@@ -293,8 +296,9 @@ private struct TabTurnTransition: AnimatableModifier {
                 anchor: .center,
                 perspective: 0.72
             )
-            .scaleEffect(0.965 + 0.035 * amount)
-            .opacity(0.72 + 0.28 * amount)
+            .offset(x: remaining * width * direction * 0.32)
+            .scaleEffect(0.975 + 0.025 * amount)
+            .opacity(0.9 + 0.1 * amount)
     }
 }
 
