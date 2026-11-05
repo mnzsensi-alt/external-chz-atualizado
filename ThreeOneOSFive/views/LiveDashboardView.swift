@@ -36,29 +36,7 @@ struct LiveDashboardView: View {
     }
 
     private var gameSelector: some View {
-        HStack(spacing: 0) {
-            gameButton("Free Fire", index: 0)
-            Rectangle()
-                .fill(Color.white.opacity(0.035))
-                .frame(width: 1, height: 34)
-            gameButton("Free Fire MAX", index: 1)
-        }
-        .frame(height: 48)
-        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func gameButton(_ title: String, index: Int) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.16)) { selectedGame = index }
-        } label: {
-            Text(title)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(selectedGame == index ? accent : Color(white: 0.62))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selectedGame == index ? .isSelected : [])
+        GameModeSelector(selectedGame: $selectedGame, accent: accent, cardBackground: cardBackground)
     }
 
     private var featureSection: some View {
@@ -71,6 +49,52 @@ struct LiveDashboardView: View {
                 )
             }
         }
+    }
+}
+
+private struct GameModeSelector: View {
+    @Binding var selectedGame: Int
+    let accent: Color
+    let cardBackground: Color
+
+    var body: some View {
+        HStack(spacing: 0) {
+            gameButton("Free Fire", index: 0)
+            Rectangle()
+                .fill(Color.white.opacity(0.035))
+                .frame(width: 1, height: 34)
+            gameButton("Free Fire MAX", index: 1)
+        }
+        .frame(height: 48)
+        .background {
+            GeometryReader { proxy in
+                Capsule()
+                    .fill(accent)
+                    .frame(width: 30, height: 2.5)
+                    .position(
+                        x: proxy.size.width * (selectedGame == 0 ? 0.25 : 0.75),
+                        y: proxy.size.height - 3
+                    )
+                    .animation(.spring(response: 0.38, dampingFraction: 0.82), value: selectedGame)
+            }
+        }
+        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func gameButton(_ title: String, index: Int) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
+                selectedGame = index
+            }
+        } label: {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(selectedGame == index ? accent : Color(white: 0.62))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selectedGame == index ? .isSelected : [])
     }
 }
 
@@ -171,29 +195,7 @@ struct AimbotPreviewView: View {
     }
 
     private var gameSelector: some View {
-        HStack(spacing: 0) {
-            gameButton("Free Fire", index: 0)
-            Rectangle()
-                .fill(Color.white.opacity(0.035))
-                .frame(width: 1, height: 34)
-            gameButton("Free Fire MAX", index: 1)
-        }
-        .frame(height: 48)
-        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func gameButton(_ title: String, index: Int) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.16)) { selectedGame = index }
-        } label: {
-            Text(title)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(selectedGame == index ? accent : Color(white: 0.62))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selectedGame == index ? .isSelected : [])
+        GameModeSelector(selectedGame: $selectedGame, accent: accent, cardBackground: cardBackground)
     }
 }
 
