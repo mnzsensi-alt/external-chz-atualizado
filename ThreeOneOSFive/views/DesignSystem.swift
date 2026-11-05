@@ -208,6 +208,7 @@ struct LiquidGlassSurface: ViewModifier {
                             endPoint: .bottomTrailing
                         )
                     )
+                }
             }
             .overlay {
                 shape.strokeBorder(Color.white.opacity(0.22), lineWidth: 0.65)
