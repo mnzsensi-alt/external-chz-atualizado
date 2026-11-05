@@ -18,6 +18,7 @@ struct FilesTabSwitcherView: View {
                         tabRow(tab)
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(Color.clear)
                     .contextMenu { tabActions(tab) }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
@@ -34,6 +35,7 @@ struct FilesTabSwitcherView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle(language.text("browser.tabs"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -68,6 +70,7 @@ struct FilesTabSwitcherView: View {
                 Text(language.text("browser.tab_name_message"))
             }
         }
+        .background { LiquidGlassBackdrop() }
     }
 
     private func tabRow(_ tab: FilesTabState) -> some View {
@@ -97,6 +100,7 @@ struct FilesTabSwitcherView: View {
         }
         .contentShape(Rectangle())
         .padding(.vertical, 3)
+        .liquidGlassSurface(cornerRadius: 12, tint: tab.id == session.selectedTabID ? AppTheme.accent : .clear)
     }
 
     @ViewBuilder

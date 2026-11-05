@@ -116,17 +116,20 @@ struct AppDataBrowserView: View {
     }
 
     private var appList: some View {
-        VStack(spacing: 0) {
-            if horizontalSizeClass == .regular {
-                FilesTabStrip(session: $tabSession)
+        ZStack {
+            LiquidGlassBackdrop()
+            VStack(spacing: 0) {
+                if horizontalSizeClass == .regular {
+                    FilesTabStrip(session: $tabSession)
+                }
+                AppSearchField(
+                    text: $searchText,
+                    prompt: language.text("browser.search"),
+                    clearLabel: language.text("common.clear")
+                )
+                Divider()
+                appRows
             }
-            AppSearchField(
-                text: $searchText,
-                prompt: language.text("browser.search"),
-                clearLabel: language.text("common.clear")
-            )
-            Divider()
-            appRows
         }
     }
 
@@ -152,6 +155,7 @@ struct AppDataBrowserView: View {
                             }
                         }
                         .padding(.vertical, 2)
+                        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
                     }
                     .contextMenu {
                         openInNewTabButton(workspaceDestination)
@@ -193,6 +197,7 @@ struct AppDataBrowserView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
         .environment(\.defaultMinListRowHeight, 48)
         .scrollDismissesKeyboard(.interactively)
         .overlay {
@@ -239,6 +244,7 @@ struct AppDataBrowserView: View {
         }
         .padding(.vertical, 2)
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
     }
 
     private func openInNewTabButton(_ destination: FileBrowserDestination) -> some View {

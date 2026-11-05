@@ -27,7 +27,7 @@ struct RepositoryHomeView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 32)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background { LiquidGlassBackdrop() }
             .refreshable {
                 await store.refreshAllAndWait()
                 rebuildFeed()
@@ -129,16 +129,10 @@ struct RepositoryHomeView: View {
                         }
                     }
                 }
-                .background(
-                    Color(uiColor: .systemBackground),
-                    in: RoundedRectangle(
-                        cornerRadius: AppTheme.contentCardCornerRadius,
-                        style: .continuous
-                    )
+                .liquidGlassSurface(
+                    cornerRadius: AppTheme.contentCardCornerRadius,
+                    tint: AppTheme.liquidGlassAccent
                 )
-                .overlay {
-                    AppCardBorder()
-                }
             }
         }
     }
@@ -169,16 +163,10 @@ struct RepositoryHomeView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 20)
         .padding(.vertical, 48)
-        .background(
-            Color(uiColor: .systemBackground),
-            in: RoundedRectangle(
-                cornerRadius: AppTheme.contentCardCornerRadius,
-                style: .continuous
-            )
+        .liquidGlassSurface(
+            cornerRadius: AppTheme.contentCardCornerRadius,
+            tint: AppTheme.liquidGlassAccent
         )
-        .overlay {
-            AppCardBorder()
-        }
     }
 
     private func rebuildFeed() {
@@ -246,6 +234,8 @@ struct RepositoryNewView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text("tab.new"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -368,6 +358,7 @@ struct RepositorySearchView: View {
                     prompt: language.text("repository.search_prompt"),
                     clearLabel: language.text("common.clear")
                 )
+                .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
                 Divider()
                 List {
                     if query.isEmpty {
@@ -390,6 +381,8 @@ struct RepositorySearchView: View {
                     }
                 }
                 .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background { LiquidGlassBackdrop() }
                 .scrollDismissesKeyboard(.interactively)
                 .refreshable {
                     await store.refreshAllAndWait()
@@ -427,6 +420,7 @@ struct RepositorySearchView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 64)
+        .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
     }
 
     private var searchEmpty: some View {
@@ -443,6 +437,7 @@ struct RepositorySearchView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 64)
+        .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
     }
 }
 

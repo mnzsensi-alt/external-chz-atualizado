@@ -123,6 +123,8 @@ struct PatchProjectsView: View {
                     listRows
                 }
                 .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .listRowBackground(Color.clear)
                 .sheet(isPresented: $showCreate) {
                     PatchProjectEditorView(
                         existingProject: nil,
@@ -132,6 +134,7 @@ struct PatchProjectsView: View {
                     }
                 }
             }
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text("tab.installed"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -329,6 +332,8 @@ struct PatchProjectsView: View {
             }
             .pickerStyle(.segmented)
             .accessibilityLabel("Grupo de opções pré-instaladas")
+            .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+            .listRowBackground(Color.clear)
         } header: {
             Text("Patches pré-instalados")
         }
@@ -422,6 +427,7 @@ struct PatchProjectsView: View {
             }
         }
         .padding(.vertical, 4)
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
     }
 
     private func bundledPatchRow(
@@ -455,6 +461,7 @@ struct PatchProjectsView: View {
             .accessibilityLabel("\(active ? "Desativar" : "Ativar") \(option.filename)")
         }
         .padding(.vertical, 5)
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
     }
 
     private func bundledPatchLoadingRow(_ option: BundledPatchOption) -> some View {
@@ -472,6 +479,7 @@ struct PatchProjectsView: View {
             ProgressView()
         }
         .padding(.vertical, 5)
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
     }
 
     private func bundledPatchUnavailableRow(_ option: BundledPatchOption) -> some View {
@@ -495,6 +503,7 @@ struct PatchProjectsView: View {
             .disabled(store.isBusy)
         }
         .padding(.vertical, 5)
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
     }
 
     private var cleanerRow: some View {
@@ -520,6 +529,7 @@ struct PatchProjectsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
     }
 
     private var wallpaperSymbol: String {
@@ -694,6 +704,7 @@ private struct PatchProjectRow: View {
             }
         }
         .padding(.vertical, 4)
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
     }
 
     private var rowDetail: String {
@@ -1001,6 +1012,8 @@ private struct PatchProjectDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background { LiquidGlassBackdrop() }
         .navigationTitle(item?.project?.name ?? language.text("patch.title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -1112,6 +1125,7 @@ private struct PatchProjectDetailView: View {
         }
         .font(.subheadline)
         .padding(.vertical, 5)
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
     }
 
     private func ruleSummary(_ rule: PatchRule) -> some View {
@@ -1386,7 +1400,6 @@ private struct PatchActivityView: UIViewControllerRepresentable {
 
 
 struct BundledPatchesTabView: View {
-    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var store: PatchProjectStore
     @State private var pendingAction: PendingBundledPatchAction?
 
@@ -1433,7 +1446,7 @@ struct BundledPatchesTabView: View {
                 .padding(.top, 18)
                 .padding(.bottom, 28)
             }
-            .background(AppTheme.pageBackground.ignoresSafeArea())
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(groupTitle)
             .navigationBarTitleDisplayMode(.inline)
             .confirmationDialog(
@@ -1470,11 +1483,7 @@ struct BundledPatchesTabView: View {
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 46, height: 46)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
-                }
+                .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
             VStack(alignment: .leading, spacing: 4) {
                 Text(groupTitle.uppercased())
                     .font(.caption.weight(.bold))
@@ -1505,10 +1514,7 @@ struct BundledPatchesTabView: View {
                     .font(.caption.monospacedDigit().weight(.bold))
                     .foregroundStyle(.primary)
                     .frame(width: 42, height: 42)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay {
-                        Circle().strokeBorder(Color.primary.opacity(0.14), lineWidth: 1)
-                    }
+                    .liquidGlassSurface(cornerRadius: 21, tint: AppTheme.liquidGlassAccent)
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("OPÇÃO \(displayNumber)")
@@ -1567,28 +1573,7 @@ struct BundledPatchesTabView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 23, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 23, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.primary.opacity(0.18),
-                            Color.primary.opacity(0.035),
-                            Color.primary.opacity(0.12)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-        }
-        .shadow(
-            color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.055),
-            radius: 14,
-            x: 0,
-            y: 7
-        )
+        .liquidGlassSurface(cornerRadius: 23, tint: AppTheme.liquidGlassAccent)
     }
 
     private func glassButton(
@@ -1637,11 +1622,7 @@ struct DeviceInfoTabView: View {
                             .font(.system(size: 23, weight: .medium))
                             .foregroundStyle(.primary)
                             .frame(width: 50, height: 50)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 17, style: .continuous)
-                                    .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
-                            }
+                            .liquidGlassSurface(cornerRadius: 17, tint: AppTheme.liquidGlassAccent)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("SEU DISPOSITIVO")
                                 .font(.caption.weight(.bold))
@@ -1685,7 +1666,7 @@ struct DeviceInfoTabView: View {
                 .padding(.top, 18)
                 .padding(.bottom, 28)
             }
-            .background(AppTheme.pageBackground.ignoresSafeArea())
+            .background { LiquidGlassBackdrop() }
             .navigationTitle("Dispositivo")
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -1705,11 +1686,7 @@ private struct DeviceInfoGlassCard: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 38, height: 38)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.8)
-                }
+                .liquidGlassSurface(cornerRadius: 13, tint: AppTheme.liquidGlassAccent)
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.caption2.weight(.bold))
@@ -1728,12 +1705,7 @@ private struct DeviceInfoGlassCard: View {
         }
         .padding(15)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 21, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 21, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.9)
-        }
-        .shadow(color: Color.black.opacity(0.045), radius: 12, x: 0, y: 5)
+        .liquidGlassSurface(cornerRadius: 21, tint: AppTheme.liquidGlassAccent)
     }
 }
 
@@ -1742,8 +1714,6 @@ struct AvatarCacheTabView: View {
     @State private var secondPassPreviewEnabled = false
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
-    private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
-    private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
 
     var body: some View {
         NavigationStack {
@@ -1758,7 +1728,7 @@ struct AvatarCacheTabView: View {
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity)
             }
-            .background(pageBackground.ignoresSafeArea())
+            .background { LiquidGlassBackdrop() }
             .toolbar(.hidden, for: .navigationBar)
         }
         .tint(accent)
@@ -1782,7 +1752,7 @@ struct AvatarCacheTabView: View {
         .padding(.horizontal, 16)
         .frame(height: 62)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
     }
 }
 
@@ -1790,8 +1760,6 @@ struct LiquidGlassDeviceInfoTabView: View {
     @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
-    private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
-    private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
 
     private enum CompatibilityStatus {
         case compatible
@@ -1842,7 +1810,7 @@ struct LiquidGlassDeviceInfoTabView: View {
                                 .font(.system(size: 15, weight: .bold))
                                 .foregroundStyle(.white)
                                 .frame(width: 38, height: 38)
-                                .background(cardBackground, in: Circle())
+                                .liquidGlassSurface(cornerRadius: 19, tint: accent)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(darkModeEnabled ? "Ativar modo claro" : "Ativar modo escuro")
@@ -1857,7 +1825,7 @@ struct LiquidGlassDeviceInfoTabView: View {
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity, alignment: .top)
             }
-            .background(pageBackground.ignoresSafeArea())
+            .background { LiquidGlassBackdrop() }
             .toolbar(.hidden, for: .navigationBar)
         }
         .tint(accent)
@@ -1881,7 +1849,7 @@ struct LiquidGlassDeviceInfoTabView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(profileCardSurface())
+        .liquidGlassSurface(cornerRadius: 16, tint: accent)
     }
 
     private func deviceInfoRow(title: String, symbol: String, value: String) -> some View {
@@ -1903,11 +1871,5 @@ struct LiquidGlassDeviceInfoTabView: View {
             Spacer(minLength: 0)
         }
     }
-
-    private func profileCardSurface() -> some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(cardBackground)
-    }
-
 
 }

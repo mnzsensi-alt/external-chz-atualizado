@@ -43,6 +43,8 @@ struct LegacyRepositoryExploreView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text("repository.explore"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -128,6 +130,8 @@ struct LegacyRepositoryExploreView: View {
             }
             .contentShape(Rectangle())
         }
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent.opacity(0.10))
+        .listRowBackground(Color.clear)
         .buttonStyle(.plain)
         .accessibilityHint(language.text("repository.open_tool_hint"))
     }
@@ -155,6 +159,8 @@ struct LegacyRepositoryExploreView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 32)
+            .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.accent.opacity(0.06))
+            .listRowBackground(Color.clear)
         }
     }
 
@@ -167,6 +173,7 @@ struct LegacyRepositoryExploreView: View {
                 NavigationLink(value: record) {
                     RepositoryPackageRow(record: record)
                 }
+                .listRowBackground(Color.clear)
             }
         }
     }
@@ -210,11 +217,14 @@ struct LegacyRepositorySourcesView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 48)
+                        .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.accent.opacity(0.06))
+                        .listRowBackground(Color.clear)
                     }
                 } else {
                     Section {
                         ForEach(store.sources) { source in
                             sourceRow(source)
+                                .listRowBackground(Color.clear)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
                                         store.removeSource(source)
@@ -232,6 +242,8 @@ struct LegacyRepositorySourcesView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text("repository.sources"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -265,6 +277,7 @@ struct LegacyRepositorySourcesView: View {
     private func sourceRow(_ source: RepositorySource) -> some View {
         sourceIdentity(source)
         .padding(.vertical, 4)
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent.opacity(0.07))
         .contextMenu {
             Button {
                 store.refresh(source)
@@ -389,7 +402,7 @@ struct RepositoryPackageDetailView: View {
                 .padding(.bottom, 32)
             }
             .scrollIndicators(.hidden)
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background { LiquidGlassBackdrop() }
             .onAppear {
                 scrollToInformationIfNeeded(using: proxy)
             }
@@ -458,16 +471,10 @@ struct RepositoryPackageDetailView: View {
             installButton
         }
         .padding(18)
-        .background(
-            Color(uiColor: .systemBackground),
-            in: RoundedRectangle(
-                cornerRadius: AppTheme.contentCardCornerRadius,
-                style: .continuous
-            )
+        .liquidGlassSurface(
+            cornerRadius: AppTheme.contentCardCornerRadius,
+            tint: AppTheme.accent.opacity(0.08)
         )
-        .overlay {
-            AppCardBorder()
-        }
     }
 
     private var packageIdentity: some View {
@@ -623,16 +630,16 @@ struct RepositoryPackageDetailView: View {
         RepositoryRemoteImage(url: url, cornerRadius: 0)
             .frame(maxWidth: .infinity)
             .aspectRatio(16 / 7, contentMode: .fit)
-            .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(
                 RoundedRectangle(
                     cornerRadius: AppTheme.contentCardCornerRadius,
                     style: .continuous
                 )
             )
-            .overlay {
-                AppCardBorder()
-            }
+            .liquidGlassSurface(
+                cornerRadius: AppTheme.contentCardCornerRadius,
+                tint: AppTheme.accent.opacity(0.06)
+            )
     }
 
     private func detailBlock<Content: View>(
@@ -645,16 +652,10 @@ struct RepositoryPackageDetailView: View {
             content()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(AppTheme.contentCardPadding)
-                .background(
-                    Color(uiColor: .systemBackground),
-                    in: RoundedRectangle(
-                        cornerRadius: AppTheme.contentCardCornerRadius,
-                        style: .continuous
-                    )
+                .liquidGlassSurface(
+                    cornerRadius: AppTheme.contentCardCornerRadius,
+                    tint: AppTheme.accent.opacity(0.06)
                 )
-                .overlay {
-                    AppCardBorder()
-                }
         }
     }
 
@@ -772,7 +773,7 @@ struct RepositoryPackageDetailView: View {
             .lineLimit(1)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(Color(uiColor: .secondarySystemFill), in: Capsule())
+            .liquidGlassSurface(cornerRadius: 999, tint: AppTheme.accent.opacity(0.08))
     }
 }
 
@@ -802,6 +803,7 @@ struct RepositoryPackageRow: View {
             }
         }
         .padding(.vertical, 4)
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent.opacity(0.05))
     }
 }
 

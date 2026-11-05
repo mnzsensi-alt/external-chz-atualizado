@@ -36,6 +36,8 @@ struct WallpaperLabView: View {
                 packagesSection
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text("wallpaper.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
@@ -103,6 +105,9 @@ struct WallpaperLabView: View {
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 4)
+                .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                .listRowBackground(Color.clear)
                 Text(
                     language.text(
                         "wallpaper.store_summary",
@@ -113,15 +118,26 @@ struct WallpaperLabView: View {
                 )
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
+                .padding(.vertical, 4)
+                .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                .listRowBackground(Color.clear)
             } else if let accessError {
                 Label(accessError, systemImage: "xmark.shield.fill")
                     .foregroundStyle(.red)
+                    .padding(.vertical, 4)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent.opacity(0.10))
+                    .listRowBackground(Color.clear)
                 Button(language.text("wallpaper.try_again")) { checkAccess() }
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                    .listRowBackground(Color.clear)
             } else {
                 HStack(spacing: 10) {
                     ProgressView()
                     Text(language.text("wallpaper.checking"))
                 }
+                .padding(.vertical, 4)
+                .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                .listRowBackground(Color.clear)
             }
         } header: { Text(language.text("wallpaper.access")) }
     }
@@ -144,6 +160,8 @@ struct WallpaperLabView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
+                .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
+                .listRowBackground(Color.clear)
             } else {
                 ForEach(packages) { package in
                     NavigationLink {
@@ -157,6 +175,8 @@ struct WallpaperLabView: View {
                     } label: {
                         packageRow(package)
                     }
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                    .listRowBackground(Color.clear)
                 }
             }
         } header: {
@@ -224,7 +244,7 @@ struct WallpaperLabView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 18)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
             }
         }
     }
@@ -458,6 +478,8 @@ private struct WallpaperPackageDetailView: View {
                     }
                 }
                 .padding(.vertical, 6)
+                .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
+                .listRowBackground(Color.clear)
             }
 
             Section(language.text("wallpaper.package_details")) {
@@ -476,6 +498,8 @@ private struct WallpaperPackageDetailView: View {
                         .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 3)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                    .listRowBackground(Color.clear)
                 }
             }
 
@@ -492,6 +516,8 @@ private struct WallpaperPackageDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background { LiquidGlassBackdrop() }
         .navigationTitle(package.displayName)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -537,10 +563,7 @@ struct InstalledWallpaperPackageDetailView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 18)
-                .background(
-                    .regularMaterial,
-                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                )
+                .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
             }
         }
     }
@@ -682,16 +705,25 @@ struct WallpaperResetSettingsView: View {
                             : "exclamationmark.triangle.fill"
                     )
                     .foregroundStyle(report.canInstall ? Color.green : Color.orange)
+                    .padding(.vertical, 4)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                    .listRowBackground(Color.clear)
                     LabeledContent(language.text("wallpaper.custom_count")) {
                         Text("\(report.customDescriptorCount)")
                             .monospacedDigit()
                     }
+                    .padding(.vertical, 4)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
+                    .listRowBackground(Color.clear)
                 } else if !isBusy {
                     Label(
                         language.text("wallpaper.error.access"),
                         systemImage: "xmark.shield.fill"
                     )
                     .foregroundStyle(.red)
+                    .padding(.vertical, 4)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent.opacity(0.10))
+                    .listRowBackground(Color.clear)
                 }
             }
 
@@ -706,6 +738,9 @@ struct WallpaperResetSettingsView: View {
                         )
                     }
                     .disabled(isBusy || !report.canInstall)
+                    .padding(.vertical, 4)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent.opacity(0.10))
+                    .listRowBackground(Color.clear)
                 } footer: {
                     Text(language.text("wallpaper.reset_footer"))
                 }
@@ -727,10 +762,14 @@ struct WallpaperResetSettingsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 28)
+                    .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
+                    .listRowBackground(Color.clear)
                 }
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background { LiquidGlassBackdrop() }
         .navigationTitle(language.text("wallpaper.reset"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -759,10 +798,7 @@ struct WallpaperResetSettingsView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 18)
-                .background(
-                    .regularMaterial,
-                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                )
+                .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
             }
         }
     }

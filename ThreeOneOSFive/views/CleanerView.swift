@@ -70,10 +70,14 @@ struct CleanerView: View {
                     prompt: language.text("cleaner.search"),
                     clearLabel: language.text("common.clear")
                 )
+                .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.accent)
                 Divider()
+                    .overlay(AppTheme.accent.opacity(0.22))
                 cleanerList
                     .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
             }
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text("cleaner.title"))
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
@@ -105,10 +109,14 @@ struct CleanerView: View {
                 Text(sizeText(totalAvailableBytes))
                     .monospacedDigit()
             }
+            .liquidGlassSurface(cornerRadius: 12)
+            .listRowBackground(Color.clear)
             LabeledContent(language.text("cleaner.selected")) {
                 Text(language.text("cleaner.selected_summary", Int64(selectedBundleIDs.count), sizeText(selectedBytes)))
                     .monospacedDigit()
             }
+            .liquidGlassSurface(cornerRadius: 12)
+            .listRowBackground(Color.clear)
             cleanAction
         } header: {
             Label(language.text("cleaner.limited_mode"), systemImage: "checkmark.shield")
@@ -142,6 +150,8 @@ struct CleanerView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(isCleaning)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
+                    .listRowBackground(Color.clear)
                 }
             }
         } header: {
@@ -305,6 +315,8 @@ struct CleanerView: View {
         .buttonStyle(.borderedProminent)
         .disabled(selectedBundleIDs.isEmpty || isBusy)
         .padding(.vertical, 4)
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
+        .listRowBackground(Color.clear)
     }
 
     private var emptySection: some View {
@@ -334,6 +346,8 @@ struct CleanerView: View {
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 32)
+            .liquidGlassSurface(cornerRadius: 16)
+            .listRowBackground(Color.clear)
         }
     }
 

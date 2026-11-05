@@ -24,6 +24,7 @@ struct SettingsView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
                 }
 
                 Section(language.text("settings.language")) {
@@ -34,18 +35,23 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
                 }
 
                 Section {
                     Toggle(isOn: $cleanerEnabled) {
                         Label(language.text("tab.cleaner"), systemImage: "sparkles")
                     }
+                    .toggleStyle(DashboardToggleStyle())
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
                     Toggle(isOn: $developerModeEnabled) {
                         Label(
                             language.text("settings.developer_mode"),
                             systemImage: "hammer.fill"
                         )
                     }
+                    .toggleStyle(DashboardToggleStyle())
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
                 } header: {
                     Text(language.text("dashboard.features"))
                 } footer: {
@@ -63,6 +69,7 @@ struct SettingsView: View {
                                 language.text("wallpaper.reset"),
                                 systemImage: "arrow.counterclockwise"
                             )
+                            .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
                         }
                     } header: {
                         Text(language.text("tab.wallpapers"))
@@ -73,7 +80,9 @@ struct SettingsView: View {
 
                 Section(language.text("common.device")) {
                     LabeledContent(language.text("dashboard.hardware_model"), value: AppInfo.displayMachineName)
+                        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
                     LabeledContent(language.text("settings.ios_version"), value: "\(AppInfo.osVersion) (\(AppInfo.osBuild))")
+                        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
                 }
 
                 Section {
@@ -96,6 +105,7 @@ struct SettingsView: View {
                         }
                     }
                     .padding(.vertical, 2)
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
                 } header: {
                     Text(language.text("settings.verified_versions"))
                 } footer: {
@@ -144,6 +154,9 @@ struct SettingsView: View {
                 }
             }
             .tint(AppTheme.accent)
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
+            .listRowBackground(Color.clear)
             .navigationTitle(language.text("settings.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -199,6 +212,7 @@ struct SettingsView: View {
                         .frame(width: 28, height: 28)
                 }
                 .contentShape(Rectangle())
+                .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
             }
             .accessibilityLabel(language.text("accessibility.open_profile", name))
         }

@@ -8,6 +8,9 @@ enum AppTheme {
     static let accent = Color(uiColor: .label)
     static let pageBackground = Color(uiColor: .systemBackground)
     static let consoleBackground = Color(uiColor: .secondarySystemBackground)
+    static let liquidGlassAccent = Color(red: 1, green: 0.12, blue: 0.19)
+    static let liquidGlassEdge = Color.white.opacity(0.36)
+    static let liquidGlassFill = Color.white.opacity(0.055)
     static let pageInset: CGFloat = 16
     static let rowIconSize: CGFloat = 17
     static let rowIconFrame: CGFloat = 28
@@ -29,8 +32,12 @@ struct AppCardBorder: View {
             style: .continuous
         )
         .strokeBorder(
-            Color(uiColor: .separator).opacity(0.22),
-            lineWidth: 0.5
+            LinearGradient(
+                colors: [AppTheme.liquidGlassEdge, Color.white.opacity(0.08)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            lineWidth: 0.7
         )
         .accessibilityHidden(true)
     }
@@ -45,7 +52,11 @@ struct AppRowIcon: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(tint.opacity(0.12))
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(tint.opacity(0.12))
+                }
             Image(systemName: systemName)
                 .font(.system(size: symbolSize, weight: .medium))
                 .foregroundStyle(tint)
@@ -87,10 +98,11 @@ struct AppSearchField: View {
         }
         .padding(.horizontal, 11)
         .frame(minHeight: 36)
-        .background(
-            Color(uiColor: .secondarySystemFill),
-            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-        )
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(AppTheme.liquidGlassEdge.opacity(0.52), lineWidth: 0.6)
+        }
         .padding(.horizontal, AppTheme.pageInset)
         .padding(.vertical, 8)
         .background(.bar)
@@ -131,7 +143,13 @@ struct DashboardToggleStyle: ToggleStyle {
         } label: {
             ZStack(alignment: configuration.isOn ? .trailing : .leading) {
                 Capsule()
-                    .fill(Color(red: 0.11, green: 0.11, blue: 0.13))
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Capsule().fill(configuration.isOn ? AppTheme.liquidGlassAccent.opacity(0.34) : Color.white.opacity(0.055))
+                    }
+                    .overlay {
+                        Capsule().strokeBorder(Color.white.opacity(0.34), lineWidth: 0.7)
+                    }
                     .frame(width: 48, height: 30)
                 Circle()
                     .fill(configuration.isOn ? Color.white : Color(white: 0.61))
@@ -144,5 +162,77 @@ struct DashboardToggleStyle: ToggleStyle {
         .buttonStyle(.plain)
         .accessibilityValue(configuration.isOn ? "Ligado" : "Desligado")
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+
+struct LiquidGlassBackdrop: View {
+    var body: some View {
+        ZStack {
+            Color(uiColor: .systemBackground)
+            RadialGradient(
+                colors: [AppTheme.liquidGlassAccent.opacity(0.16), .clear],
+                center: .topTrailing,
+                startRadius: 10,
+                endRadius: 440
+            )
+            RadialGradient(
+                colors: [Color.cyan.opacity(0.075), .clear],
+                center: .bottomLeading,
+                startRadius: 12,
+                endRadius: 520
+            )
+        }
+        .ignoresSafeArea()
+        .accessibilityHidden(true)
+    }
+}
+
+struct LiquidGlassSurface: ViewModifier {
+    var cornerRadius: CGFloat = AppTheme.contentCardCornerRadius
+    var tint: Color = .clear
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return content
+            .background {
+                shape
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        shape.fill(AppTheme.liquidGlassFill)
+                    }
+                    .overlay {
+                        shape.fill(tint.opacity(0.075))
+                    }
+                    .overlay {
+                        shape.fill(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.19), Color.white.opacity(0.025), .clear],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    }
+            }
+            .overlay {
+                shape.strokeBorder(
+                    LinearGradient(
+                        colors: [AppTheme.liquidGlassEdge, Color.white.opacity(0.075)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.75
+                )
+            }
+            .shadow(color: Color.black.opacity(0.2), radius: 16, x: 0, y: 8)
+    }
+}
+
+extension View {
+    func liquidGlassSurface(
+        cornerRadius: CGFloat = AppTheme.contentCardCornerRadius,
+        tint: Color = .clear
+    ) -> some View {
+        modifier(LiquidGlassSurface(cornerRadius: cornerRadius, tint: tint))
     }
 }

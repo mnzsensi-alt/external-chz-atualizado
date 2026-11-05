@@ -57,8 +57,13 @@ struct ContentView: View {
                 compactLayout
             }
         }
+        .background {
+            LiquidGlassBackdrop()
+        }
         .tint(Color(red: 1, green: 0.12, blue: 0.19))
         .imageScale(.small)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .onChange(of: patchDraftCoordinator.request?.id) { requestID in
             if requestID != nil { selectTab(AppSection.installed.rawValue) }
         }
@@ -94,7 +99,7 @@ struct ContentView: View {
                     .tag(section.rawValue)
                 }
             }
-            .toolbarBackground(Color.black, for: .tabBar)
+            .toolbarBackground(.ultraThinMaterial, for: .tabBar)
             .toolbarBackground(.visible, for: .tabBar)
             .overlay(alignment: .top) {
                 let contentHeight = max(0, geometry.size.height - 50)
@@ -126,13 +131,16 @@ struct ContentView: View {
                             .fontWeight(section.rawValue == tabNavigation.selectedTab ? .semibold : .regular)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
+                            .background {
+                                if section.rawValue == tabNavigation.selectedTab {
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
+                                        .padding(.vertical, 3)
+                                }
+                            }
                     }
                     .buttonStyle(.plain)
-                    .listRowBackground(
-                        section.rawValue == tabNavigation.selectedTab
-                            ? AppTheme.accent.opacity(0.14)
-                            : Color.clear
-                    )
+                    .listRowBackground(Color.clear)
                     .accessibilityAddTraits(
                         section.rawValue == tabNavigation.selectedTab ? .isSelected : []
                     )

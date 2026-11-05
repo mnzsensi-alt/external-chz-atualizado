@@ -26,7 +26,7 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.pageBackground
+            LiquidGlassBackdrop()
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -63,7 +63,7 @@ struct OnboardingView: View {
         .padding(.top, 16)
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
-        .background(AppTheme.pageBackground)
+        .liquidGlassSurface(cornerRadius: 0, tint: AppTheme.accent.opacity(0.035))
     }
 
     @ViewBuilder
@@ -148,14 +148,7 @@ struct OnboardingView: View {
                         }
                         .padding(.horizontal, 16)
                         .frame(minHeight: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color(uiColor: .secondarySystemBackground))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .stroke(isSelected ? AppTheme.accent : Color.secondary.opacity(0.12), lineWidth: 1)
-                                )
-                        )
+                        .liquidGlassSurface(cornerRadius: 10, tint: isSelected ? AppTheme.accent : .clear)
                         .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -196,10 +189,7 @@ struct OnboardingView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(
-                    Color(uiColor: .secondarySystemBackground),
-                    in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-                )
+                .liquidGlassSurface(cornerRadius: 8, tint: AppTheme.accent)
         }
         .frame(maxWidth: .infinity, alignment: .top)
     }
@@ -255,10 +245,7 @@ struct OnboardingView: View {
                     }
                 }
                 .padding(12)
-                .background(
-                    Color(uiColor: .secondarySystemBackground),
-                    in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                )
+                .liquidGlassSurface(cornerRadius: 10, tint: AppTheme.accent)
             }
 
             Text(language.text("onboarding.versions_footer", AppInfo.osVersion, AppInfo.osBuild))
@@ -292,10 +279,7 @@ struct OnboardingView: View {
                 installBullet(icon: "exclamationmark.triangle.fill", text: language.text("onboarding.install_jailbreak"), color: .orange)
             }
             .padding(14)
-            .background(
-                Color(uiColor: .secondarySystemBackground),
-                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-            )
+            .liquidGlassSurface(cornerRadius: 10, tint: AppTheme.accent)
 
             Text(language.text("onboarding.install_footer"))
                 .font(.caption)
@@ -309,16 +293,13 @@ struct OnboardingView: View {
     private func featureIcon(systemName: String, color: Color) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemBackground))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(color.opacity(0.3), lineWidth: 1)
-                )
+                .fill(.clear)
             Image(systemName: systemName)
                 .font(.system(size: 28, weight: .medium))
                 .foregroundStyle(color)
         }
         .frame(width: 72, height: 72)
+        .liquidGlassSurface(cornerRadius: 14, tint: color)
         .accessibilityHidden(true)
     }
 
@@ -348,7 +329,7 @@ struct OnboardingView: View {
         }
         .font(.subheadline)
         .padding(12)
-        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .liquidGlassSurface(cornerRadius: 10, tint: AppTheme.accent.opacity(0.35))
     }
 
     private func installBullet(icon: String, text: String, color: Color) -> some View {
@@ -381,10 +362,7 @@ struct OnboardingView: View {
         .padding(.top, 12)
         .padding(.bottom, 10)
         .frame(maxWidth: .infinity)
-        .background(.bar)
-        .overlay(alignment: .top) {
-            Divider()
-        }
+        .liquidGlassSurface(cornerRadius: 0, tint: AppTheme.accent.opacity(0.04))
     }
 
     @ViewBuilder

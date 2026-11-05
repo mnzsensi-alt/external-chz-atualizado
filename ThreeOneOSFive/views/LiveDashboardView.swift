@@ -7,7 +7,6 @@ struct LiveDashboardView: View {
     @State private var previewFeatures = [false, true, true, false, false]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
-    private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
     private let features = ["BODY HS", "NECK HS", "DRAG HS", "CHEST HS", "MAGIC BULLET"]
 
@@ -25,7 +24,7 @@ struct LiveDashboardView: View {
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity)
             }
-            .background(pageBackground.ignoresSafeArea())
+            .background { LiquidGlassBackdrop() }
             .toolbar(.hidden, for: .navigationBar)
         }
         .tint(accent)
@@ -78,7 +77,7 @@ private struct GameModeSelector: View {
                     .animation(.spring(response: 0.38, dampingFraction: 0.82), value: selectedGame)
             }
         }
-        .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .liquidGlassSurface(cornerRadius: 16, tint: accent)
     }
 
     private func gameButton(_ title: String, index: Int) -> some View {
@@ -107,6 +106,7 @@ struct AnimatedGIFBanner: View {
         }
         .frame(height: 150)
         .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
+        .liquidGlassSurface(cornerRadius: 21, tint: Color(red: 1, green: 0.12, blue: 0.19))
         .accessibilityLabel("Animação do banner")
     }
 }
@@ -129,7 +129,13 @@ private struct PreviewFeatureRow: View {
                 Spacer(minLength: 10)
                 ZStack(alignment: isOn ? .trailing : .leading) {
                     Capsule()
-                        .fill(Color(red: 0.11, green: 0.11, blue: 0.13))
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            Capsule().fill(isOn ? cardBackground.opacity(0.3) : Color.white.opacity(0.045))
+                        }
+                        .overlay {
+                            Capsule().strokeBorder(Color.white.opacity(0.34), lineWidth: 0.7)
+                        }
                         .frame(width: 48, height: 30)
                     Circle()
                         .fill(isOn ? Color.white : Color(white: 0.61))
@@ -141,7 +147,7 @@ private struct PreviewFeatureRow: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 62)
-            .background(cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .liquidGlassSurface(cornerRadius: 16, tint: Color(red: 1, green: 0.12, blue: 0.19))
             .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -158,7 +164,6 @@ struct AimbotPreviewView: View {
     @State private var previewToggles = [false, false, false, false, false, true]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
-    private let pageBackground = Color(red: 0.025, green: 0.025, blue: 0.03)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
     private let options = [
         "MENU",
@@ -190,7 +195,7 @@ struct AimbotPreviewView: View {
             .frame(maxWidth: 600)
             .frame(maxWidth: .infinity)
         }
-        .background(pageBackground.ignoresSafeArea())
+        .background { LiquidGlassBackdrop() }
         .tint(accent)
     }
 

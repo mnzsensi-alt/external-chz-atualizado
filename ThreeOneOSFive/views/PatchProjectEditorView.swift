@@ -54,6 +54,7 @@ struct PatchProjectEditorView: View {
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
                 }
+                .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
 
                 if existingProject == nil {
                     Section {
@@ -74,6 +75,7 @@ struct PatchProjectEditorView: View {
                     } footer: {
                         Text(language.text("patch.workspace_bundle_footer"))
                     }
+                    .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
                 }
 
                 if existingProject != nil || !rules.isEmpty || !directories.isEmpty {
@@ -114,6 +116,7 @@ struct PatchProjectEditorView: View {
                     } footer: {
                         Text(language.text("patch.workspace_edit_footer"))
                     }
+                    .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
                 }
 
                 Section {
@@ -133,6 +136,7 @@ struct PatchProjectEditorView: View {
                         ? "patch.password_immutable_footer"
                         : "patch.password_existing_footer"))
                 }
+                .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
 
                 Section {
                     Toggle(isOn: $isPrivate) {
@@ -149,14 +153,18 @@ struct PatchProjectEditorView: View {
                         ? "patch.private_footer"
                         : "patch.private_existing_footer"))
                 }
+                .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
 
                 if let validationMessageKey {
                     Section {
                         Label(language.text(validationMessageKey), systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.red)
                     }
+                    .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.accent)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text(existingProject == nil ? "patch.new" : "patch.edit"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -317,6 +325,7 @@ struct PatchRuleEditorView: View {
                 } footer: {
                     Text(language.text("patch.bundle_not_uuid_footer"))
                 }
+                .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
 
                 Section(language.text("patch.replacement_file")) {
                     Button {
@@ -363,14 +372,18 @@ struct PatchRuleEditorView: View {
                         )
                     }
                 }
+                .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
 
                 if let validationMessageKey {
                     Section {
                         Label(language.text(validationMessageKey), systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.red)
                     }
+                    .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.accent)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text(originalRule == nil ? "patch.add_rule" : "patch.edit_rule"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

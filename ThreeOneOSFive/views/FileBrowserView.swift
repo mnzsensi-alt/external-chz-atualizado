@@ -83,12 +83,15 @@ struct FileBrowserView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            LiquidGlassBackdrop()
+            VStack(spacing: 0) {
             AppSearchField(
                 text: $fileSearchText,
                 prompt: language.text("browser.search_files"),
                 clearLabel: language.text("common.clear")
             )
+            .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
             Divider()
             List {
                 Section {
@@ -103,6 +106,7 @@ struct FileBrowserView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
             .environment(\.defaultMinListRowHeight, AppTheme.fileRowHeight)
             .scrollDismissesKeyboard(.interactively)
             .overlay {
@@ -121,6 +125,7 @@ struct FileBrowserView: View {
                 }
                 .transition(.opacity)
                 .animation(interfaceAnimation, value: overlayState)
+            }
             }
         }
         .navigationTitle(currentPath == containerPath ? title : (currentPath as NSString).lastPathComponent)
@@ -268,7 +273,7 @@ struct FileBrowserView: View {
                             .ignoresSafeArea()
                         ProgressView(activityText)
                             .padding()
-                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.accent)
                     }
                     .transition(.opacity)
                 }
@@ -1563,6 +1568,7 @@ private struct FileEntryRow: View {
             }
         }
         .contentShape(Rectangle())
+        .liquidGlassSurface(cornerRadius: 12, tint: tint)
         .accessibilityElement(children: .combine)
     }
 }
@@ -1614,8 +1620,7 @@ private struct FileSelectionActionBar: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.accent)
         .disabled(selectedCount == 0)
     }
 
@@ -1671,8 +1676,7 @@ private struct FilePasteBar: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.accent)
     }
 }
 

@@ -19,7 +19,9 @@ struct LogView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            ZStack {
+                LiquidGlassBackdrop()
+                Group {
                 if appLog.entries.isEmpty {
                     VStack(spacing: 14) {
                         Image(systemName: "apple.terminal")
@@ -35,6 +37,7 @@ struct LogView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(32)
+                    .liquidGlassSurface(cornerRadius: 18, tint: AppTheme.liquidGlassAccent)
                 } else {
                     ScrollViewReader { proxy in
                         ScrollView {
@@ -52,12 +55,12 @@ struct LogView: View {
                                             Divider()
                                         }
                                     }
+                                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
                                     .id(index)
                                     .accessibilityLabel(language.text("accessibility.log_entry", Int64(index + 1), entry))
                                 }
                             }
                             .padding(AppTheme.pageInset)
-                            .background(AppTheme.consoleBackground)
                         }
                         .onChange(of: appLog.entries.count) { count in
                             guard count > 0 else { return }
@@ -72,7 +75,7 @@ struct LogView: View {
                     }
                 }
             }
-            .background(AppTheme.consoleBackground.ignoresSafeArea())
+            }
             .navigationTitle(language.text("logs.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

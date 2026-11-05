@@ -45,7 +45,7 @@ struct FilesTabStrip: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
         }
-        .background(.bar)
+        .liquidGlassSurface(cornerRadius: 0, tint: AppTheme.accent.opacity(0.035))
         .overlay(alignment: .bottom) { Divider() }
         .alert(
             language.text("browser.rename_tab"),
@@ -94,9 +94,9 @@ struct FilesTabStrip: View {
             .accessibilityLabel(language.text("browser.close_tab"))
         }
         .foregroundStyle(isSelected ? AppTheme.accent : Color.secondary)
-        .background(
-            isSelected ? AppTheme.accent.opacity(0.12) : Color.secondary.opacity(0.08),
-            in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .liquidGlassSurface(
+            cornerRadius: 8,
+            tint: isSelected ? AppTheme.accent.opacity(0.12) : Color.secondary.opacity(0.04)
         )
         .contextMenu {
             Button {

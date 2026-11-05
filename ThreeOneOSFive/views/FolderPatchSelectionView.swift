@@ -18,6 +18,8 @@ struct FolderPatchSelectionView: View {
 
     var body: some View {
         NavigationStack {
+            ZStack {
+                LiquidGlassBackdrop()
             Group {
                 if isLoading {
                     ProgressView(language.text("patch.folder_scanning"))
@@ -34,9 +36,11 @@ struct FolderPatchSelectionView: View {
                             .multilineTextAlignment(.center)
                     }
                     .padding()
+                    .liquidGlassSurface(tint: AppTheme.liquidGlassAccent)
                 } else {
                     fileList
                 }
+            }
             }
             .navigationTitle(language.text("patch.select_files"))
             .navigationBarTitleDisplayMode(.inline)
@@ -70,6 +74,8 @@ struct FolderPatchSelectionView: View {
                     )
                     .font(.subheadline)
                     .foregroundStyle(.red)
+                    .padding(10)
+                    .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
                 }
             }
 
@@ -109,8 +115,10 @@ struct FolderPatchSelectionView: View {
                             }
                         }
                         .contentShape(Rectangle())
+                        .liquidGlassSurface(cornerRadius: 14, tint: AppTheme.liquidGlassAccent)
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(Color.clear)
                 }
             } header: {
                 Text(language.text("patch.selected_count", Int64(selectedIDs.count)))
@@ -120,6 +128,7 @@ struct FolderPatchSelectionView: View {
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
     }
 
     private var selectionActionTitle: String {

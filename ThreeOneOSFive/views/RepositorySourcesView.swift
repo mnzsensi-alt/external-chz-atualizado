@@ -44,6 +44,8 @@ struct RepositorySourcesView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background { LiquidGlassBackdrop() }
             .navigationTitle(language.text("repository.sources"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -105,6 +107,7 @@ struct RepositorySourcesView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 48)
+        .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
     }
 
     @ViewBuilder
@@ -159,6 +162,7 @@ private struct RepositorySourceRow: View {
             .lineLimit(2)
         }
         .padding(.vertical, 4)
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
     }
 }
 
@@ -248,6 +252,8 @@ private struct RepositorySourceDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background { LiquidGlassBackdrop() }
         .navigationTitle(
             repository?.name
                 ?? source?.manifestURL.host
@@ -313,6 +319,7 @@ private struct RepositorySourceDetailView: View {
                 }
             }
             .padding(.vertical, 3)
+            .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
         }
     }
 
@@ -389,6 +396,7 @@ private struct RepositoryTagRow: View {
         .padding(.vertical, 2)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
+        .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
     }
 }
 
@@ -404,9 +412,13 @@ private struct RepositoryTagPackagesView: View {
                 RepositoryPackageRow(record: record)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
+                    .liquidGlassSurface(cornerRadius: 12, tint: AppTheme.liquidGlassAccent)
             }
+            .listRowBackground(Color.clear)
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background { LiquidGlassBackdrop() }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
