@@ -222,26 +222,20 @@ private struct PreviewFeatureRow: View {
 
 
 struct AimbotPreviewView: View {
-    @State private var previewToggles = [false, false, false, false, false, true]
+    @State private var previewToggles = [false]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
-    private let options = [
-        "MENU",
-        "ONLY ESP",
-        "VIP MOD MENU",
-        "AIM SILENT + ESP",
-        "AIMBOT+ESP ALL +144 FPS",
-        "AIMBOT"
-    ]
+    private let options = ["MENU"]
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 17) {
+                AnimatedGIFBanner()
                 featureSection
             }
             .padding(.horizontal, 16)
-            .padding(.top, 22)
+            .padding(.top, 8)
             .padding(.bottom, 24)
             .frame(maxWidth: 600)
             .frame(maxWidth: .infinity)
