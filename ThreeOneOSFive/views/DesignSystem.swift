@@ -52,7 +52,7 @@ struct AppRowIcon: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.055))
                 .overlay {
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
                         .fill(tint.opacity(0.12))
@@ -143,7 +143,7 @@ struct DashboardToggleStyle: ToggleStyle {
         } label: {
             ZStack(alignment: configuration.isOn ? .trailing : .leading) {
                 Capsule()
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.07))
                     .overlay {
                         Capsule().fill(configuration.isOn ? AppTheme.liquidGlassAccent.opacity(0.34) : Color.white.opacity(0.055))
                     }
@@ -170,17 +170,14 @@ struct LiquidGlassBackdrop: View {
     var body: some View {
         ZStack {
             Color(uiColor: .systemBackground)
-            RadialGradient(
-                colors: [AppTheme.liquidGlassAccent.opacity(0.16), .clear],
-                center: .topTrailing,
-                startRadius: 10,
-                endRadius: 440
-            )
-            RadialGradient(
-                colors: [Color.cyan.opacity(0.075), .clear],
-                center: .bottomLeading,
-                startRadius: 12,
-                endRadius: 520
+            LinearGradient(
+                colors: [
+                    AppTheme.liquidGlassAccent.opacity(0.11),
+                    Color.clear,
+                    Color.cyan.opacity(0.035)
+                ],
+                startPoint: .topTrailing,
+                endPoint: .bottomLeading
             )
         }
         .ignoresSafeArea()
@@ -196,35 +193,25 @@ struct LiquidGlassSurface: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         return content
             .background {
-                shape
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        shape.fill(AppTheme.liquidGlassFill)
+                ZStack {
+                    if cornerRadius >= 19 {
+                        shape.fill(.ultraThinMaterial)
+                    } else {
+                        shape.fill(Color.white.opacity(0.045))
                     }
-                    .overlay {
-                        shape.fill(tint.opacity(0.075))
-                    }
-                    .overlay {
-                        shape.fill(
-                            LinearGradient(
-                                colors: [Color.white.opacity(0.19), Color.white.opacity(0.025), .clear],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                    shape.fill(AppTheme.liquidGlassFill)
+                    shape.fill(tint.opacity(0.06))
+                    shape.fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.12), Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                    }
+                    )
             }
             .overlay {
-                shape.strokeBorder(
-                    LinearGradient(
-                        colors: [AppTheme.liquidGlassEdge, Color.white.opacity(0.075)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.75
-                )
+                shape.strokeBorder(Color.white.opacity(0.22), lineWidth: 0.65)
             }
-            .shadow(color: Color.black.opacity(0.2), radius: 16, x: 0, y: 8)
     }
 }
 
@@ -234,5 +221,16 @@ extension View {
         tint: Color = .clear
     ) -> some View {
         modifier(LiquidGlassSurface(cornerRadius: cornerRadius, tint: tint))
+    }
+}
+
+private struct TabContentActiveKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var isTabContentActive: Bool {
+        get { self[TabContentActiveKey.self] }
+        set { self[TabContentActiveKey.self] = newValue }
     }
 }

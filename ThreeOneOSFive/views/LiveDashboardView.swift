@@ -129,7 +129,7 @@ private struct PreviewFeatureRow: View {
                 Spacer(minLength: 10)
                 ZStack(alignment: isOn ? .trailing : .leading) {
                     Capsule()
-                        .fill(.ultraThinMaterial)
+                        .fill(Color.white.opacity(0.07))
                         .overlay {
                             Capsule().fill(isOn ? cardBackground.opacity(0.3) : Color.white.opacity(0.045))
                         }
@@ -207,6 +207,7 @@ struct AimbotPreviewView: View {
 
 struct AnimatedGIFView: UIViewRepresentable {
     let resourceName: String
+    @Environment(\.isTabContentActive) private var isTabContentActive
 
     func makeUIView(context: Context) -> UIImageView {
         let imageView = UIImageView()
@@ -237,7 +238,9 @@ struct AnimatedGIFView: UIViewRepresentable {
             imageView.animationImages = frames
             imageView.animationDuration = max(totalDuration, 0.1)
             imageView.animationRepeatCount = 0
-            imageView.startAnimating()
+            if isTabContentActive {
+                imageView.startAnimating()
+            }
         } else {
             imageView.image = frames.first
         }
@@ -245,8 +248,12 @@ struct AnimatedGIFView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIImageView, context: Context) {
-        if !uiView.isAnimating, uiView.animationImages?.isEmpty == false {
+        if isTabContentActive,
+           !uiView.isAnimating,
+           uiView.animationImages?.isEmpty == false {
             uiView.startAnimating()
+        } else if !isTabContentActive, uiView.isAnimating {
+            uiView.stopAnimating()
         }
     }
 }

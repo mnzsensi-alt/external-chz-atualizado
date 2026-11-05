@@ -209,6 +209,7 @@ struct ContentView: View {
                 )
 
                 sectionContent(section)
+                    .environment(\.isTabContentActive, isCurrent || isSource)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .offset(x: offset)
                     .zIndex(isCurrent ? 2 : (isSource ? 1 : 0))
