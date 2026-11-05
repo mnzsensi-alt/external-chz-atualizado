@@ -1711,14 +1711,13 @@ private struct DeviceInfoGlassCard: View {
 
 
 struct AvatarCacheTabView: View {
-    @State private var skinPreviewEnabled = [false, false, false, false]
+    @State private var skinPreviewEnabled = [false, false, false]
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let skinFeatures = [
         "PULANTE + 2 PASSE",
-        "SONIC",
         "PULANTE",
-        "MORDECAI"
+        "BOLSONARO"
     ]
 
     var body: some View {
