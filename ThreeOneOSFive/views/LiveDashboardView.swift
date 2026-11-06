@@ -2,9 +2,15 @@ import SwiftUI
 import ImageIO
 import UIKit
 
+enum PreviewOptionSelection {
+    static let storageKey = "preview.selectedOption"
+    static let defaultOption = "function-0-1"
+}
+
 struct LiveDashboardView: View {
     @StateObject private var gameMode = GameModeTransitionState()
-    @State private var selectedFunction: String? = "0-1"
+    @AppStorage(PreviewOptionSelection.storageKey)
+    private var selectedPreviewOption = PreviewOptionSelection.defaultOption
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
     private let freeFireFeatures = [
@@ -64,14 +70,14 @@ struct LiveDashboardView: View {
     }
 
     private func toggleBinding(for mode: Int, index: Int) -> Binding<Bool> {
-        let optionID = "\(mode)-\(index)"
+        let optionID = "function-\(mode)-\(index)"
         return Binding(
-            get: { selectedFunction == optionID },
+            get: { selectedPreviewOption == optionID },
             set: { isOn in
                 if isOn {
-                    selectedFunction = optionID
-                } else if selectedFunction == optionID {
-                    selectedFunction = nil
+                    selectedPreviewOption = optionID
+                } else if selectedPreviewOption == optionID {
+                    selectedPreviewOption = ""
                 }
             }
         )
@@ -276,7 +282,8 @@ private struct PreviewFeatureRow: View {
 
 
 struct AimbotPreviewView: View {
-    @State private var previewToggles = [false]
+    @AppStorage(PreviewOptionSelection.storageKey)
+    private var selectedPreviewOption = PreviewOptionSelection.defaultOption
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
@@ -307,7 +314,12 @@ struct AimbotPreviewView: View {
                 PreviewFeatureRow(
                     title: options[index],
                     description: "Painel com silent, ESP, no recoil e etc.",
-                    isOn: $previewToggles[index],
+                    isOn: Binding(
+                        get: { selectedPreviewOption == "aimbot-menu" },
+                        set: { isOn in
+                            selectedPreviewOption = isOn ? "aimbot-menu" : ""
+                        }
+                    ),
                     cardBackground: cardBackground
                 )
             }

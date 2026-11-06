@@ -1711,7 +1711,8 @@ private struct DeviceInfoGlassCard: View {
 
 
 struct AvatarCacheTabView: View {
-    @State private var selectedSkinIndex: Int?
+    @AppStorage(PreviewOptionSelection.storageKey)
+    private var selectedPreviewOption = PreviewOptionSelection.defaultOption
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let skinFeatures = [
@@ -1781,13 +1782,14 @@ struct AvatarCacheTabView: View {
     }
 
     private func skinToggleBinding(for index: Int) -> Binding<Bool> {
-        Binding(
-            get: { selectedSkinIndex == index },
+        let optionID = "skin-\(index)"
+        return Binding(
+            get: { selectedPreviewOption == optionID },
             set: { isOn in
                 if isOn {
-                    selectedSkinIndex = index
-                } else if selectedSkinIndex == index {
-                    selectedSkinIndex = nil
+                    selectedPreviewOption = optionID
+                } else if selectedPreviewOption == optionID {
+                    selectedPreviewOption = ""
                 }
             }
         )
