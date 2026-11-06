@@ -297,7 +297,7 @@ struct AimbotPreviewView: View {
             ForEach(options.indices, id: \.self) { index in
                 PreviewFeatureRow(
                     title: options[index],
-                    description: nil,
+                    description: "Painel com silent, ESP, no recoil e etc.",
                     isOn: $previewToggles[index],
                     cardBackground: cardBackground
                 )

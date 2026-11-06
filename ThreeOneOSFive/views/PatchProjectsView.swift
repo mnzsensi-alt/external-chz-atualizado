@@ -1719,6 +1719,11 @@ struct AvatarCacheTabView: View {
         "PULANTE",
         "BOLSONARO"
     ]
+    private let skinDescriptions = [
+        "txt no personagem santinho",
+        "txt no personagem santinho",
+        "txt no personagem maro"
+    ]
 
     var body: some View {
         NavigationStack {
@@ -1748,13 +1753,19 @@ struct AvatarCacheTabView: View {
     }
 
     private func featureRow(_ index: Int) -> some View {
-        HStack(spacing: 13) {
-            Text(skinFeatures[index])
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
-            Spacer(minLength: 10)
+        HStack(alignment: .center, spacing: 13) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(skinFeatures[index])
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                Text(skinDescriptions[index])
+                    .font(.system(size: 12, weight: .regular, design: .rounded))
+                    .foregroundStyle(Color(white: 0.72))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             Toggle(skinFeatures[index], isOn: $skinPreviewEnabled[index])
                 .labelsHidden()
                 .toggleStyle(DashboardToggleStyle())
@@ -1763,7 +1774,8 @@ struct AvatarCacheTabView: View {
                 .frame(width: 48, height: 30)
         }
         .padding(.horizontal, 16)
-        .frame(height: 62)
+        .padding(.vertical, 11)
+        .frame(minHeight: 82)
         .frame(maxWidth: .infinity, alignment: .leading)
         .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
     }
