@@ -4,11 +4,22 @@ import UIKit
 
 struct LiveDashboardView: View {
     @StateObject private var gameMode = GameModeTransitionState()
-    @State private var previewFeatures = [false, true, true, false, false]
-
+    @State private var freeFireToggles = [false, true, true, false, false]
+    @State private var freeFireMaxToggles = [false, true, true]
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
-    private let features = ["BODY HS", "NECK HS", "DRAG HS", "CHEST HS", "MAGIC BULLET"]
+    private let freeFireFeatures = [
+        DashboardFeature(title: "AIMBOT HEAD", description: "aimbot legit para a cabeça"),
+        DashboardFeature(title: "HS PESCOÇO", description: "hitbox da cabeça expandida para o pescoço"),
+        DashboardFeature(title: "HS ALTO", description: "hitbox da cabeça expandida pra cima"),
+        DashboardFeature(title: "CHEST HS", description: "hitbox da cabeça expandida para o peito"),
+        DashboardFeature(title: "HS PESCOÇO + ANTENA", description: "hitbox da cabeça expandida para o pescoço + antena")
+    ]
+    private let freeFireMaxFeatures = [
+        DashboardFeature(title: "HS PESCOÇO E ALTO", description: "hitbox da cabeça expandida para o pescoço e pra cima"),
+        DashboardFeature(title: "HS PESCOÇO", description: "hitbox da cabeça expandida para o pescoço"),
+        DashboardFeature(title: "HS ALTO", description: "hitbox da cabeça expandida pra cima")
+    ]
 
     var body: some View {
         NavigationStack {
@@ -39,19 +50,43 @@ struct LiveDashboardView: View {
     }
 
     private var featureSection: some View {
-        GameModeContentTransition(state: gameMode) { _ in
-            VStack(spacing: 9) {
-                ForEach(features.indices, id: \.self) { index in
-                    PreviewFeatureRow(
-                        title: features[index],
-                        isOn: $previewFeatures[index],
-                        cardBackground: cardBackground
-                    )
-                }
+        let visibleCount = max(
+            features(for: gameMode.selectedGame).count,
+            gameMode.outgoingGame.map { features(for: $0).count } ?? 0
+        )
+        return GameModeContentTransition(state: gameMode) { mode in
+            featureList(for: mode)
+        }
+        .frame(height: CGFloat(visibleCount * 82 + max(visibleCount - 1, 0) * 9))
+    }
+
+    private func features(for mode: Int) -> [DashboardFeature] {
+        mode == 0 ? freeFireFeatures : freeFireMaxFeatures
+    }
+
+    private func toggleBinding(for mode: Int, index: Int) -> Binding<Bool> {
+        mode == 0 ? $freeFireToggles[index] : $freeFireMaxToggles[index]
+    }
+
+    @ViewBuilder
+    private func featureList(for mode: Int) -> some View {
+        let modeFeatures = features(for: mode)
+        VStack(spacing: 9) {
+            ForEach(modeFeatures.indices, id: \.self) { index in
+                PreviewFeatureRow(
+                    title: modeFeatures[index].title,
+                    description: modeFeatures[index].description,
+                    isOn: toggleBinding(for: mode, index: index),
+                    cardBackground: cardBackground
+                )
             }
         }
-        .frame(height: CGFloat(features.count * 62 + (features.count - 1) * 9))
     }
+}
+
+private struct DashboardFeature {
+    let title: String
+    let description: String
 }
 
 private final class GameModeTransitionState: ObservableObject {
@@ -175,6 +210,7 @@ struct AnimatedGIFBanner: View {
 
 private struct PreviewFeatureRow: View {
     let title: String
+    let description: String?
     @Binding var isOn: Bool
     let cardBackground: Color
 
@@ -184,11 +220,19 @@ private struct PreviewFeatureRow: View {
                 isOn.toggle()
             }
         } label: {
-            HStack(spacing: 16) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                Spacer(minLength: 10)
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    if let description {
+                        Text(description)
+                            .font(.system(size: 12, weight: .regular, design: .rounded))
+                            .foregroundStyle(Color(white: 0.72))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 ZStack(alignment: isOn ? .trailing : .leading) {
                     Capsule()
                         .fill(Color.white.opacity(0.07))
@@ -208,7 +252,8 @@ private struct PreviewFeatureRow: View {
                 .accessibilityHidden(true)
             }
             .padding(.horizontal, 16)
-            .frame(height: 62)
+            .padding(.vertical, description == nil ? 0 : 11)
+            .frame(minHeight: description == nil ? 62 : 82)
             .liquidGlassSurface(cornerRadius: 16, tint: Color(red: 1, green: 0.12, blue: 0.19))
             .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
@@ -252,6 +297,7 @@ struct AimbotPreviewView: View {
             ForEach(options.indices, id: \.self) { index in
                 PreviewFeatureRow(
                     title: options[index],
+                    description: nil,
                     isOn: $previewToggles[index],
                     cardBackground: cardBackground
                 )
