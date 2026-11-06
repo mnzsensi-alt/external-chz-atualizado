@@ -1711,7 +1711,7 @@ private struct DeviceInfoGlassCard: View {
 
 
 struct AvatarCacheTabView: View {
-    @State private var skinPreviewEnabled = [false, false, false]
+    @State private var selectedSkinIndex: Int?
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let skinFeatures = [
@@ -1766,7 +1766,7 @@ struct AvatarCacheTabView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Toggle(skinFeatures[index], isOn: $skinPreviewEnabled[index])
+            Toggle(skinFeatures[index], isOn: skinToggleBinding(for: index))
                 .labelsHidden()
                 .toggleStyle(DashboardToggleStyle())
                 .accessibilityLabel(skinFeatures[index])
@@ -1779,10 +1779,21 @@ struct AvatarCacheTabView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
     }
+
+    private func skinToggleBinding(for index: Int) -> Binding<Bool> {
+        Binding(
+            get: { selectedSkinIndex == index },
+            set: { isOn in
+                if isOn {
+                    selectedSkinIndex = index
+                } else if selectedSkinIndex == index {
+                    selectedSkinIndex = nil
+                }
+            }
+        )
+    }
 }
 struct LiquidGlassDeviceInfoTabView: View {
-    @AppStorage(AppAppearance.darkModeStorageKey) private var darkModeEnabled = true
-
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
 
     private enum CompatibilityStatus {
@@ -1827,17 +1838,6 @@ struct LiquidGlassDeviceInfoTabView: View {
                             .tracking(1.4)
                             .foregroundStyle(accent)
                         Spacer()
-                        Button {
-                            darkModeEnabled.toggle()
-                        } label: {
-                            Image(systemName: darkModeEnabled ? "sun.max.fill" : "moon.fill")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(width: 38, height: 38)
-                                .liquidGlassSurface(cornerRadius: 19, tint: accent)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(darkModeEnabled ? "Ativar modo claro" : "Ativar modo escuro")
                     }
 
                     deviceSummaryCard

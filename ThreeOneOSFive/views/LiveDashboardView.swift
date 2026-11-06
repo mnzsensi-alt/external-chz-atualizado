@@ -4,8 +4,7 @@ import UIKit
 
 struct LiveDashboardView: View {
     @StateObject private var gameMode = GameModeTransitionState()
-    @State private var freeFireToggles = [false, true, true, false, false]
-    @State private var freeFireMaxToggles = [false, true, true]
+    @State private var selectedFunction: String? = "0-1"
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
     private let freeFireFeatures = [
@@ -65,7 +64,17 @@ struct LiveDashboardView: View {
     }
 
     private func toggleBinding(for mode: Int, index: Int) -> Binding<Bool> {
-        mode == 0 ? $freeFireToggles[index] : $freeFireMaxToggles[index]
+        let optionID = "\(mode)-\(index)"
+        return Binding(
+            get: { selectedFunction == optionID },
+            set: { isOn in
+                if isOn {
+                    selectedFunction = optionID
+                } else if selectedFunction == optionID {
+                    selectedFunction = nil
+                }
+            }
+        )
     }
 
     @ViewBuilder
