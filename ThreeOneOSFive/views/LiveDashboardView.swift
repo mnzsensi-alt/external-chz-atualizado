@@ -229,18 +229,21 @@ struct AimbotPreviewView: View {
     private let options = ["MENU"]
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 17) {
-                AnimatedGIFBanner()
-                featureSection
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 17) {
+                    AnimatedGIFBanner()
+                    featureSection
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 24)
-            .frame(maxWidth: 600)
-            .frame(maxWidth: .infinity)
+            .background { LiquidGlassBackdrop() }
+            .toolbar(.hidden, for: .navigationBar)
         }
-        .background { LiquidGlassBackdrop() }
         .tint(accent)
     }
 
