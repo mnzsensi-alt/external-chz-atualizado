@@ -1876,12 +1876,7 @@ struct LiquidGlassDeviceInfoTabView: View {
                 VStack(alignment: .leading, spacing: 13) {
                     sectionHeading("LICENÇA")
                     licenseCard
-                    Text("Aguardando integração da chave e da API de licença")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(mutedText)
-                        .padding(.horizontal, 3)
-                        .padding(.top, -8)
-
+                    copyKeyButton
                     sectionHeading("DISPOSITIVO")
                         .padding(.top, 4)
                     deviceSummaryCard
@@ -1901,13 +1896,13 @@ struct LiquidGlassDeviceInfoTabView: View {
     private func sectionHeading(_ title: String) -> some View {
         Text(title)
             .font(.system(size: 11, weight: .heavy, design: .rounded))
-            .tracking(2.0)
+            .tracking(2.8)
             .foregroundStyle(licenseText)
             .padding(.top, 2)
     }
 
     private var licenseCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center, spacing: 12) {
                 Image(systemName: "key.fill")
                     .font(.system(size: 21, weight: .semibold))
@@ -1917,7 +1912,7 @@ struct LiquidGlassDeviceInfoTabView: View {
                     Text("Key")
                         .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundStyle(mutedText)
-                    Text(isLicenseKeyVisible ? "CHAVE NÃO CONFIGURADA" : "3105-••••••••••••")
+                    Text(isLicenseKeyVisible ? "3105-DEMO-2026-0000" : "3105-••••••••••••")
                         .font(.system(size: isLicenseKeyVisible ? 12 : 15, weight: .semibold, design: .monospaced))
                         .foregroundStyle(licenseText)
                         .lineLimit(1)
@@ -1940,28 +1935,33 @@ struct LiquidGlassDeviceInfoTabView: View {
             }
 
             licenseDivider
-            licenseInfoRow(symbol: "calendar", title: "Validade", value: "--/--/---- --:--:--")
+            // Valores de demonstração copiados da referência visual; serão trocados pelos dados da API.
+            licenseInfoRow(symbol: "calendar", title: "Validade", value: "2026-09-22T17:22:42.570807")
             licenseDivider
-            licenseInfoRow(symbol: "clock.fill", title: "Tempo restante", value: "---d --:--:--")
-
-            Button {} label: {
-                Label("COPIAR CHAVE", systemImage: "doc.on.doc")
-                    .font(.system(size: 11, weight: .heavy, design: .rounded))
-                    .tracking(0.8)
-                    .foregroundStyle(accent.opacity(0.72))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(accent.opacity(0.09), in: Capsule())
-                    .overlay(Capsule().strokeBorder(accent.opacity(0.2), lineWidth: 0.7))
-            }
-            .buttonStyle(.plain)
-            .disabled(true)
-            .accessibilityHint("A cópia será habilitada após a integração da API de licença")
+            licenseInfoRow(symbol: "clock.fill", title: "Tempo restante", value: "993d 23:59:25")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 19)
+        .padding(.vertical, 15)
         .frame(maxWidth: .infinity, alignment: .leading)
         .liquidGlassSurface(cornerRadius: 20, tint: accent)
+    }
+
+    private var copyKeyButton: some View {
+        Button {} label: {
+            Label("COPIAR CHAVE", systemImage: "doc.on.doc")
+                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .tracking(0.8)
+                .foregroundStyle(licenseText.opacity(0.82))
+                .padding(.horizontal, 15)
+                .padding(.vertical, 9)
+                .background(accent.opacity(0.16), in: Capsule())
+                .overlay(Capsule().strokeBorder(accent.opacity(0.28), lineWidth: 0.7))
+        }
+        .buttonStyle(.plain)
+        .disabled(true)
+        .accessibilityHint("A cópia será habilitada após a integração da API de licença")
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.top, -7)
     }
 
     private var licenseDivider: some View {
@@ -1989,7 +1989,7 @@ struct LiquidGlassDeviceInfoTabView: View {
             }
             Spacer(minLength: 0)
         }
-        .frame(minHeight: 46)
+        .frame(minHeight: 42)
     }
 
     private var deviceSummaryCard: some View {
