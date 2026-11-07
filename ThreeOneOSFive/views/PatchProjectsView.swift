@@ -1711,6 +1711,7 @@ private struct DeviceInfoGlassCard: View {
 
 
 struct AvatarCacheTabView: View {
+    @State private var activationNotice: FeatureActivationNotice?
     @AppStorage(PreviewOptionSelection.storageKey)
     private var selectedPreviewOption = PreviewOptionSelection.defaultOption
 
@@ -1741,6 +1742,15 @@ struct AvatarCacheTabView: View {
             }
             .background { LiquidGlassBackdrop() }
             .toolbar(.hidden, for: .navigationBar)
+        }
+        .overlay(alignment: .top) {
+            if let activationNotice {
+                FeatureActivationToast(notice: activationNotice)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(20)
+            }
         }
         .tint(accent)
     }
@@ -1778,7 +1788,23 @@ struct AvatarCacheTabView: View {
         .padding(.vertical, 11)
         .frame(minHeight: 82)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassSurface(cornerRadius: 16, tint: AppTheme.liquidGlassAccent)
+        .liquidGlassSurface(
+            cornerRadius: 16,
+            tint: selectedPreviewOption == "skin-\(index)" ? AppTheme.liquidGlassAccent : .clear
+        )
+    }
+
+    private func showActivationNotice(_ title: String, isActive: Bool) {
+        let notice = FeatureActivationNotice(title: title, isActive: isActive)
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            activationNotice = notice
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+            guard activationNotice?.id == notice.id else { return }
+            withAnimation(.easeOut(duration: 0.22)) {
+                activationNotice = nil
+            }
+        }
     }
 
     private func skinToggleBinding(for index: Int) -> Binding<Bool> {
@@ -1788,8 +1814,10 @@ struct AvatarCacheTabView: View {
             set: { isOn in
                 if isOn {
                     selectedPreviewOption = optionID
+                    showActivationNotice(skinFeatures[index], isActive: true)
                 } else if selectedPreviewOption == optionID {
                     selectedPreviewOption = ""
+                    showActivationNotice(skinFeatures[index], isActive: false)
                 }
             }
         )

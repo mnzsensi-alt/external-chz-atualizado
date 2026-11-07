@@ -9,6 +9,7 @@ enum PreviewOptionSelection {
 
 struct LiveDashboardView: View {
     @StateObject private var gameMode = GameModeTransitionState()
+    @State private var activationNotice: FeatureActivationNotice?
     @AppStorage(PreviewOptionSelection.storageKey)
     private var selectedPreviewOption = PreviewOptionSelection.defaultOption
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
@@ -44,6 +45,15 @@ struct LiveDashboardView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .tint(accent)
+        .overlay(alignment: .top) {
+            if let activationNotice {
+                FeatureActivationToast(notice: activationNotice)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(20)
+            }
+        }
     }
 
     private var hero: some View {
@@ -92,8 +102,24 @@ struct LiveDashboardView: View {
                     title: modeFeatures[index].title,
                     description: modeFeatures[index].description,
                     isOn: toggleBinding(for: mode, index: index),
-                    cardBackground: cardBackground
+                    cardBackground: cardBackground,
+                    onToggle: { isActive in
+                        showActivationNotice(modeFeatures[index].title, isActive: isActive)
+                    }
                 )
+            }
+        }
+    }
+
+    private func showActivationNotice(_ title: String, isActive: Bool) {
+        let notice = FeatureActivationNotice(title: title, isActive: isActive)
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            activationNotice = notice
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+            guard activationNotice?.id == notice.id else { return }
+            withAnimation(.easeOut(duration: 0.22)) {
+                activationNotice = nil
             }
         }
     }
@@ -228,12 +254,15 @@ private struct PreviewFeatureRow: View {
     let description: String?
     @Binding var isOn: Bool
     let cardBackground: Color
+    let onToggle: (Bool) -> Void
 
     var body: some View {
         Button {
-            withAnimation(.spring(response: 0.24, dampingFraction: 0.8)) {
-                isOn.toggle()
+            let nextState = !isOn
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.66)) {
+                isOn = nextState
             }
+            onToggle(nextState)
         } label: {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -262,6 +291,8 @@ private struct PreviewFeatureRow: View {
                         .fill(isOn ? Color.white : Color(white: 0.61))
                         .frame(width: 24, height: 24)
                         .padding(3)
+                        .scaleEffect(isOn ? 1.08 : 1)
+                        .shadow(color: isOn ? Color.white.opacity(0.28) : .clear, radius: 5)
                 }
                 .frame(width: 48, height: 30)
                 .accessibilityHidden(true)
@@ -269,7 +300,10 @@ private struct PreviewFeatureRow: View {
             .padding(.horizontal, 16)
             .padding(.vertical, description == nil ? 0 : 11)
             .frame(minHeight: description == nil ? 62 : 82)
-            .liquidGlassSurface(cornerRadius: 16, tint: Color(red: 1, green: 0.12, blue: 0.19))
+            .liquidGlassSurface(
+                cornerRadius: 16,
+                tint: isOn ? Color(red: 1, green: 0.12, blue: 0.19) : .clear
+            )
             .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -280,10 +314,52 @@ private struct PreviewFeatureRow: View {
     }
 }
 
+struct FeatureActivationNotice: Identifiable {
+    let id = UUID()
+    let title: String
+    let isActive: Bool
+}
+
+struct FeatureActivationToast: View {
+    let notice: FeatureActivationNotice
+
+    private var accent: Color {
+        notice.isActive ? Color(red: 0.28, green: 0.82, blue: 0.48) : Color(white: 0.72)
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: notice.isActive ? "checkmark.circle.fill" : "minus.circle.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(notice.title) \(notice.isActive ? "ativado" : "desativado")")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                Text(notice.isActive ? "FUNÇÃO ATIVADA" : "FUNÇÃO DESATIVADA")
+                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .tracking(1.1)
+                    .foregroundStyle(accent)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 15)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .strokeBorder(accent.opacity(0.34), lineWidth: 0.8)
+        }
+        .shadow(color: .black.opacity(0.28), radius: 12, y: 5)
+        .accessibilityElement(children: .combine)
+    }
+}
 
 struct AimbotPreviewView: View {
     @AppStorage(PreviewOptionSelection.storageKey)
     private var selectedPreviewOption = PreviewOptionSelection.defaultOption
+    @State private var activationNotice: FeatureActivationNotice?
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
@@ -305,6 +381,15 @@ struct AimbotPreviewView: View {
             .background { LiquidGlassBackdrop() }
             .toolbar(.hidden, for: .navigationBar)
         }
+        .overlay(alignment: .top) {
+            if let activationNotice {
+                FeatureActivationToast(notice: activationNotice)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(20)
+            }
+        }
         .tint(accent)
     }
 
@@ -320,13 +405,28 @@ struct AimbotPreviewView: View {
                             selectedPreviewOption = isOn ? "aimbot-menu" : ""
                         }
                     ),
-                    cardBackground: cardBackground
+                    cardBackground: cardBackground,
+                    onToggle: { isActive in
+                        showActivationNotice(options[index], isActive: isActive)
+                    }
                 )
             }
         }
     }
-}
 
+    private func showActivationNotice(_ title: String, isActive: Bool) {
+        let notice = FeatureActivationNotice(title: title, isActive: isActive)
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            activationNotice = notice
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+            guard activationNotice?.id == notice.id else { return }
+            withAnimation(.easeOut(duration: 0.22)) {
+                activationNotice = nil
+            }
+        }
+    }
+}
 struct AnimatedGIFView: UIViewRepresentable {
     let resourceName: String
     @Environment(\.isTabContentActive) private var isTabContentActive

@@ -137,7 +137,7 @@ struct AppLogo: View {
 struct DashboardToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Button {
-            withAnimation(.spring(response: 0.24, dampingFraction: 0.8)) {
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.66)) {
                 configuration.isOn.toggle()
             }
         } label: {
@@ -155,6 +155,11 @@ struct DashboardToggleStyle: ToggleStyle {
                     .fill(configuration.isOn ? Color.white : Color(white: 0.61))
                     .frame(width: 24, height: 24)
                     .padding(3)
+                    .scaleEffect(configuration.isOn ? 1.08 : 1)
+                    .shadow(
+                        color: configuration.isOn ? Color.white.opacity(0.28) : .clear,
+                        radius: 5
+                    )
             }
             .frame(width: 48, height: 30)
             .contentShape(Rectangle())
