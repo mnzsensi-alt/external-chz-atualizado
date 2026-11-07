@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var showLogs = false
 
     init() {
+        PreviewOptionSelection.resetSavedSelectionOnceForThisVersion()
 #if targetEnvironment(simulator)
         let arguments = ProcessInfo.processInfo.arguments
         let initialTab: Int

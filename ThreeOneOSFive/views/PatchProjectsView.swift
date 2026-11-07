@@ -1873,11 +1873,11 @@ struct LiquidGlassDeviceInfoTabView: View {
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 13) {
                     sectionHeading("LICENÇA")
                     licenseCard
                     Text("Aguardando integração da chave e da API de licença")
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundStyle(mutedText)
                         .padding(.horizontal, 3)
                         .padding(.top, -8)
@@ -1887,7 +1887,7 @@ struct LiquidGlassDeviceInfoTabView: View {
                     deviceSummaryCard
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 18)
+                .padding(.top, 14)
                 .padding(.bottom, 28)
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity, alignment: .top)
@@ -1900,25 +1900,25 @@ struct LiquidGlassDeviceInfoTabView: View {
 
     private func sectionHeading(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 12, weight: .heavy, design: .rounded))
-            .tracking(2.8)
+            .font(.system(size: 11, weight: .heavy, design: .rounded))
+            .tracking(2.0)
             .foregroundStyle(licenseText)
             .padding(.top, 2)
     }
 
     private var licenseCard: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack(alignment: .center, spacing: 15) {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 12) {
                 Image(systemName: "key.fill")
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: 21, weight: .semibold))
                     .foregroundStyle(licenseText)
-                    .frame(width: 42)
+                    .frame(width: 34)
                 VStack(alignment: .leading, spacing: 7) {
                     Text("Key")
-                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundStyle(mutedText)
                     Text(isLicenseKeyVisible ? "CHAVE NÃO CONFIGURADA" : "3105-••••••••••••")
-                        .font(.system(size: isLicenseKeyVisible ? 13 : 19, weight: .semibold, design: .monospaced))
+                        .font(.system(size: isLicenseKeyVisible ? 12 : 15, weight: .semibold, design: .monospaced))
                         .foregroundStyle(licenseText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.65)
@@ -1930,10 +1930,10 @@ struct LiquidGlassDeviceInfoTabView: View {
                     }
                 } label: {
                     Image(systemName: isLicenseKeyVisible ? "eye.fill" : "eye.slash.fill")
-                        .font(.system(size: 23, weight: .medium))
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(licenseText)
-                        .frame(width: 48, height: 48)
-                        .liquidGlassSurface(cornerRadius: 24, tint: accent)
+                        .frame(width: 38, height: 38)
+                        .liquidGlassSurface(cornerRadius: 20, tint: accent)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(isLicenseKeyVisible ? "Ocultar chave" : "Mostrar chave")
@@ -1946,11 +1946,11 @@ struct LiquidGlassDeviceInfoTabView: View {
 
             Button {} label: {
                 Label("COPIAR CHAVE", systemImage: "doc.on.doc")
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
-                    .tracking(1.1)
+                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                    .tracking(0.8)
                     .foregroundStyle(accent.opacity(0.72))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 10)
                     .background(accent.opacity(0.09), in: Capsule())
                     .overlay(Capsule().strokeBorder(accent.opacity(0.2), lineWidth: 0.7))
             }
@@ -1958,42 +1958,42 @@ struct LiquidGlassDeviceInfoTabView: View {
             .disabled(true)
             .accessibilityHint("A cópia será habilitada após a integração da API de licença")
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 23)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassSurface(cornerRadius: 24, tint: accent)
+        .liquidGlassSurface(cornerRadius: 20, tint: accent)
     }
 
     private var licenseDivider: some View {
         Rectangle()
             .fill(Color.white.opacity(0.07))
             .frame(height: 1)
-            .padding(.leading, 57)
+            .padding(.leading, 46)
     }
 
     private func licenseInfoRow(symbol: String, title: String, value: String) -> some View {
-        HStack(alignment: .center, spacing: 15) {
+        HStack(alignment: .center, spacing: 12) {
             Image(systemName: symbol)
-                .font(.system(size: 23, weight: .medium))
+                .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(licenseText)
-                .frame(width: 42)
+                .frame(width: 34)
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
-                    .font(.system(size: 20, weight: .medium, design: .rounded))
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundStyle(mutedText)
                 Text(value)
-                    .font(.system(size: 19, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 15, weight: .semibold, design: .monospaced))
                     .foregroundStyle(licenseText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.68)
             }
             Spacer(minLength: 0)
         }
-        .frame(minHeight: 58)
+        .frame(minHeight: 46)
     }
 
     private var deviceSummaryCard: some View {
-        VStack(spacing: 17) {
+        VStack(spacing: 12) {
             deviceInfoRow(
                 title: "Modelo",
                 symbol: "iphone",
@@ -2015,10 +2015,10 @@ struct LiquidGlassDeviceInfoTabView: View {
                 valueColor: compatibilityStatus.color
             )
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 22)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassSurface(cornerRadius: 24, tint: accent)
+        .liquidGlassSurface(cornerRadius: 20, tint: accent)
     }
 
     private func deviceInfoRow(
@@ -2027,22 +2027,22 @@ struct LiquidGlassDeviceInfoTabView: View {
         value: String,
         valueColor: Color
     ) -> some View {
-        HStack(alignment: .center, spacing: 15) {
+        HStack(alignment: .center, spacing: 12) {
             Image(systemName: symbol)
-                .font(.system(size: 22, weight: .medium))
+                .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(licenseText)
-                .frame(width: 42)
+                .frame(width: 34)
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
                     .foregroundStyle(mutedText)
                 Text(value)
-                    .font(.system(size: 18, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
                     .foregroundStyle(valueColor)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
-        .frame(minHeight: 58)
+        .frame(minHeight: 46)
     }
 }

@@ -4,7 +4,15 @@ import UIKit
 
 enum PreviewOptionSelection {
     static let storageKey = "preview.selectedOption"
-    static let defaultOption = "function-0-1"
+    static let defaultOption = ""
+    private static let emptySelectionMigrationKey = "preview.migration.resetSelectionOnInstall.v1"
+
+    static func resetSavedSelectionOnceForThisVersion() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: emptySelectionMigrationKey) else { return }
+        defaults.set(defaultOption, forKey: storageKey)
+        defaults.set(true, forKey: emptySelectionMigrationKey)
+    }
 }
 
 struct LiveDashboardView: View {
