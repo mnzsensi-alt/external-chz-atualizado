@@ -14,7 +14,7 @@ jobs:
           set -euo pipefail
           echo 'f7dfd9e9435c558be490e573985b9ca8255a7229244ca165577dfcad1433f011  build-source.zip' | shasum -a 256 -c -
           mkdir integrated-source
-          unzip -q build-source.zip -d integrated-source
+          python3 -m zipfile -e build-source.zip integrated-source
       - name: Archive for iOS without signing
         working-directory: integrated-source
         run: |
