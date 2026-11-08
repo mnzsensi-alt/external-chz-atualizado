@@ -1722,8 +1722,8 @@ struct AvatarCacheTabView: View {
         "BOLSONARO"
     ]
     private let skinDescriptions = [
-        "txt no personagem santinho",
-        "txt no personagem santinho",
+        "txt no personagem santino",
+        "txt no personagem santino",
         "txt no personagem maro"
     ]
 
@@ -1824,6 +1824,7 @@ struct AvatarCacheTabView: View {
     }
 }
 struct LiquidGlassDeviceInfoTabView: View {
+    @Environment(\.openURL) private var openURL
     @State private var isLicenseKeyVisible = false
 
     private let accent = Color(red: 1, green: 0.12, blue: 0.19)
@@ -1879,6 +1880,7 @@ struct LiquidGlassDeviceInfoTabView: View {
                     copyKeyButton
                     sectionHeading("DISPOSITIVO")
                         .padding(.top, 4)
+                    supportButton
                     deviceSummaryCard
                 }
                 .padding(.horizontal, 16)
@@ -1912,11 +1914,10 @@ struct LiquidGlassDeviceInfoTabView: View {
                     Text("Key")
                         .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundStyle(mutedText)
-                    Text(isLicenseKeyVisible ? "3105-DEMO-2026-0000" : "3105-••••••••••••")
-                        .font(.system(size: isLicenseKeyVisible ? 12 : 15, weight: .semibold, design: .monospaced))
+                    Text(isLicenseKeyVisible ? "3105-DEMO-26" : "3105-••••••••••••")
+                        .font(.system(size: 15, weight: .semibold, design: .monospaced))
                         .foregroundStyle(licenseText)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.65)
                 }
                 Spacer(minLength: 0)
                 Button {
@@ -1990,6 +1991,24 @@ struct LiquidGlassDeviceInfoTabView: View {
             Spacer(minLength: 0)
         }
         .frame(minHeight: 42)
+    }
+
+    private var supportButton: some View {
+        Button {
+            guard let url = URL(string: "https://discord.gg/chzz") else { return }
+            openURL(url)
+        } label: {
+            Label("OBTER SUPORTE", systemImage: "bubble.left.and.bubble.right.fill")
+                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .tracking(0.8)
+                .foregroundStyle(licenseText)
+                .padding(.horizontal, 15)
+                .padding(.vertical, 9)
+                .background(accent.opacity(0.16), in: Capsule())
+                .overlay(Capsule().strokeBorder(accent.opacity(0.28), lineWidth: 0.7))
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var deviceSummaryCard: some View {

@@ -24,15 +24,21 @@ struct LiveDashboardView: View {
     private let cardBackground = Color(red: 0.075, green: 0.075, blue: 0.085)
     private let freeFireFeatures = [
         DashboardFeature(title: "AIMBOT HEAD", description: "aimbot legit para a cabeça"),
+        DashboardFeature(title: "HS ALTO + PESCOÇO", description: "hitbox da cabeça expandida pra cima e para o pescoço"),
         DashboardFeature(title: "HS PESCOÇO", description: "hitbox da cabeça expandida para o pescoço"),
+        DashboardFeature(title: "HS PESCOÇO + ANTENA", description: "hitbox da cabeça expandida para o pescoço + antena"),
         DashboardFeature(title: "HS ALTO", description: "hitbox da cabeça expandida pra cima"),
-        DashboardFeature(title: "CHEST HS", description: "hitbox da cabeça expandida para o peito"),
-        DashboardFeature(title: "HS PESCOÇO + ANTENA", description: "hitbox da cabeça expandida para o pescoço + antena")
+        DashboardFeature(title: "HS ALTO + ANTENA", description: "hitbox da cabeça expandida pra cima + antena"),
+        DashboardFeature(title: "HS PEITO", description: "hitbox da cabeça expandida para o peito"),
+        DashboardFeature(title: "HS PESCOÇO (CACHE)", description: "hitbox da cabeça expandida para o pescoço (cache)"),
+        DashboardFeature(title: "HS PEITO + PESCOÇO (CACHE)", description: "hitbox expandida para o peito e pescoço (cache)"),
+        DashboardFeature(title: "HS PEITO (CACHE)", description: "hitbox da cabeça expandida para o peito (cache)")
     ]
     private let freeFireMaxFeatures = [
-        DashboardFeature(title: "HS PESCOÇO E ALTO", description: "hitbox da cabeça expandida para o pescoço e pra cima"),
+        DashboardFeature(title: "HS PESCOÇO + ALTO", description: "hitbox da cabeça expandida para o pescoço e pra cima"),
         DashboardFeature(title: "HS PESCOÇO", description: "hitbox da cabeça expandida para o pescoço"),
-        DashboardFeature(title: "HS ALTO", description: "hitbox da cabeça expandida pra cima")
+        DashboardFeature(title: "HS ALTO", description: "hitbox da cabeça expandida pra cima"),
+        DashboardFeature(title: "HS ALTO + ANTENA", description: "hitbox da cabeça expandida pra cima + antena")
     ]
 
     var body: some View {
