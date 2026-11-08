@@ -12,7 +12,7 @@ jobs:
       - name: Verify and unpack prepared source
         run: |
           set -euo pipefail
-          echo 'f7dfd9e9435c558be490e573985b9ca8255a7229244ca165577dfcad1433f011  build-source.zip' | shasum -a 256 -c -
+          echo '4ddefc06663f0c0759f3e551a2eb779259441d6a99b64fcd48efae20079330cf  build-source.zip' | shasum -a 256 -c -
           mkdir integrated-source
           python3 -m zipfile -e build-source.zip integrated-source
       - name: Archive for iOS without signing
