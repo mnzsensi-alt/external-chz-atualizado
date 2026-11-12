@@ -1,0 +1,53 @@
+name: Build authorized Workspace3105
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-26-intel
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and unpack authorized workspace source
+        run: |
+          set -euo pipefail
+          echo '564ee679d5a872e86f36ac2d843cd46c6495a0e9e3b38851ff7be63e162642ab  workspace3105-source.zip' | shasum -a 256 -c -
+          python3 -m zipfile -e workspace3105-source.zip workspace-source
+      - name: Test restore, file coordination and package codec
+        working-directory: workspace-source
+        run: |
+          set -euo pipefail
+          xcrun swiftc -o "$RUNNER_TEMP/workspace-tests" Sources/Core/PatchProjectModels.swift Sources/Core/PatchTransaction.swift Sources/Core/PatchPackageCodec.swift Sources/CoordinatedWorkspace.swift tests/RestorationChecks/main.swift
+          "$RUNNER_TEMP/workspace-tests"
+      - name: Archive authorized file manager for iOS
+        working-directory: workspace-source
+        run: |
+          set -euo pipefail
+          xcodebuild -project Workspace3105.xcodeproj -scheme Workspace3105 -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Workspace3105.xcarchive" CODE_SIGNING_ALLOWED=NO archive
+      - name: Verify source boundary and package IPA
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import plistlib
+          source=Path('workspace-source')
+          assert not any('exploit' in p.name.lower() or 'worse_query' in p.name.lower() for p in source.rglob('*'))
+          info=plistlib.loads((source/'Info.plist').read_bytes())
+          assert info['CFBundleIdentifier'] == '$(PRODUCT_BUNDLE_IDENTIFIER)'
+          assert not any(p.suffix in {'.dylib','.m','.c','.h'} for p in source.rglob('*'))
+          PY
+          APP_PATH="$RUNNER_TEMP/Workspace3105.xcarchive/Products/Applications/Workspace3105.app"
+          test -f "$APP_PATH/Workspace3105"
+          test -f "$APP_PATH/Demo.3105"
+          mkdir -p "$RUNNER_TEMP/workspace-ipa/Payload"
+          ditto "$APP_PATH" "$RUNNER_TEMP/workspace-ipa/Payload/Workspace3105.app"
+          (cd "$RUNNER_TEMP/workspace-ipa" && ditto -c -k --sequesterRsrc --keepParent Payload "$RUNNER_TEMP/3105-workspace-sem-assinatura.ipa")
+          unzip -t "$RUNNER_TEMP/3105-workspace-sem-assinatura.ipa"
+          shasum -a 256 "$RUNNER_TEMP/3105-workspace-sem-assinatura.ipa"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 3105-workspace-sem-assinatura
+          path: ${{ runner.temp }}/3105-workspace-sem-assinatura.ipa
+          if-no-files-found: error
+          retention-days: 14
