@@ -45,9 +45,25 @@ jobs:
           (cd "$RUNNER_TEMP/workspace-ipa" && ditto -c -k --sequesterRsrc --keepParent Payload "$RUNNER_TEMP/3105-workspace-sem-assinatura.ipa")
           unzip -t "$RUNNER_TEMP/3105-workspace-sem-assinatura.ipa"
           shasum -a 256 "$RUNNER_TEMP/3105-workspace-sem-assinatura.ipa"
+      - name: Launch simulator and capture initial screen
+        working-directory: workspace-source
+        run: |
+          set -euo pipefail
+          xcodebuild -project Workspace3105.xcodeproj -scheme Workspace3105 -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/WorkspaceSim" CODE_SIGNING_ALLOWED=NO build > "$RUNNER_TEMP/simulator-build.log" 2>&1 || { tail -100 "$RUNNER_TEMP/simulator-build.log"; exit 1; }
+          SIM_DEVICE=$(xcrun simctl list devices available --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for k,items in sorted(d["devices"].items(),reverse=True) for v in items if v["name"].startswith("iPhone") and v.get("isAvailable",False)))')
+          xcrun simctl boot "$SIM_DEVICE" || true
+          xcrun simctl bootstatus "$SIM_DEVICE" -b
+          xcrun simctl ui "$SIM_DEVICE" appearance dark
+          xcrun simctl install "$SIM_DEVICE" "$RUNNER_TEMP/WorkspaceSim/Build/Products/Release-iphonesimulator/Workspace3105.app"
+          xcrun simctl launch "$SIM_DEVICE" dev.mnzsensi.workspace3105
+          sleep 5
+          xcrun simctl io "$SIM_DEVICE" screenshot "$RUNNER_TEMP/3105-workspace-preview.png"
+          xcrun simctl shutdown "$SIM_DEVICE"
       - uses: actions/upload-artifact@v4
         with:
           name: 3105-workspace-sem-assinatura
-          path: ${{ runner.temp }}/3105-workspace-sem-assinatura.ipa
+          path: |
+            ${{ runner.temp }}/3105-workspace-sem-assinatura.ipa
+            ${{ runner.temp }}/3105-workspace-preview.png
           if-no-files-found: error
           retention-days: 14
